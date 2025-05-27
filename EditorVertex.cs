@@ -17,7 +17,7 @@ namespace ShapeData
         public float U; // horizontal
         public float V; // vertical
 
-        EditorVertex(float x, float y, float z, float u, float v)
+        public EditorVertex(float x, float y, float z, float u, float v)
         {
             X = x;
             Y = y;

@@ -19,24 +19,4 @@ namespace ShapeData
             return false;
         }
     }
-
-
-    
-
-    class Dog : Animal
-    {
-        public void Bark()
-        {
-            Console.WriteLine("Woof!");
-        }
-    }
-
-    class Animal
-    {
-        public string Name { get; set; }
-        public void MakeNoise()
-        {
-            Console.WriteLine("Generic animal noise");
-        }
-    }
 }

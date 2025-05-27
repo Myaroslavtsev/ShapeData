@@ -25,7 +25,7 @@ namespace ShapeData
 
         private readonly List<EditorVertex> vertices;
 
-        public List<EditorVertex> Vertices;
+        public List<EditorVertex> Vertices => vertices;
 
         public EditorPolygon(
             uint polygonId,

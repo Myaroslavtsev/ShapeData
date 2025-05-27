@@ -25,12 +25,15 @@ namespace ShapeData
 
         public bool AddLod(EditorLod lod)
         {
-            lods.Add(lod);
-            return true;
+            if (lods.Find(l => l.Distance == lod.Distance) == null)
+            {
+                lods.Add(lod);
+                return true;
+            }
+            return false;
         }
 
         public bool DeleteLod(int distance) =>
             GeneralMethods.RemoveListItems(lods, lod => lod.Distance == distance);
-
     }
 }
