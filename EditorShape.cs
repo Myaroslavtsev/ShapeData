@@ -23,14 +23,20 @@ namespace ShapeData
             lods = new List<EditorLod> { new EditorLod(2000) };
         }
 
-        public bool AddLod(EditorLod lod)
+        public EditorLod AddLod(EditorLod lod)
         {
-            if (lods.Find(l => l.Distance == lod.Distance) == null)
+            if (lod == null) 
+                return null;
+
+            var sameDistanceLod = lods.Find(l => l.Distance == lod.Distance);
+
+            if (sameDistanceLod == null)
             {
                 lods.Add(lod);
-                return true;
+                return lod;
             }
-            return false;
+            else            
+                return sameDistanceLod;
         }
 
         public bool DeleteLod(int distance) =>

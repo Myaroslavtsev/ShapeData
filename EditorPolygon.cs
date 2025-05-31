@@ -33,17 +33,23 @@ namespace ShapeData
             Material material = Material.SolidNorm, 
             string textureName = "blank.ace")
         {
-            if (vertexList == null || vertexList.Count < 3)
-            {
-                throw new Exception("Vertex count should be at least 3");
-            }
-
             PolygonId = polygonId;
             MaterialType = material;
             TextureFilename = textureName;
             vertices = vertexList;
         }
 
+        public EditorVertex AddVertex(EditorVertex vertex)
+        {
+            if (vertex == null)
+                return null;
+
+            vertices.Add(vertex);
+            return vertex;
+        }
+
         // to think about: how to block from deleting last 3 points but allow increasing point number
+        // when deserializer requires adding line by line
+        // so creation with less than 2 vertices should also be possible
     }
 }

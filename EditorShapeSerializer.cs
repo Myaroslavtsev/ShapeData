@@ -1,0 +1,85 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ShapeData
+{
+    class EditorShapeSerializer
+    {
+        public string MakeCsvFromEditorShape(EditorShape shape)
+        {
+            var sb = new StringBuilder();
+
+            AddShapeDataToSb(shape, sb);
+
+            sb.AppendLine("");
+
+            return sb.ToString();
+        }
+
+        private void AddShapeDataToSb(EditorShape shape, StringBuilder sb)
+        {
+            sb.AppendLine("Shape" + ";" + shape.ShapeName.Replace(';', ':'));
+
+            foreach (var lod in shape.Lods.OrderBy(l => l.Distance))
+            {
+                AddLodDataToSb(lod, sb);
+            }
+        }
+
+        private void AddLodDataToSb(EditorLod lod, StringBuilder sb)
+        {
+            sb.AppendLine(";" + "Lod" + ";" + lod.Distance);
+
+            foreach (var part in lod.Parts)
+            {
+                AddPartDataToSb(part, sb);
+            }
+        }
+
+        private void AddPartDataToSb(EditorPart part, StringBuilder sb)
+        {
+            var dataString = ";;" + "Part" + ";" +
+                part.PartName + ";" +
+                part.SayIfSmoothed() + ";" +
+                part.ReplicationParams.ReplicationMetod;
+
+            foreach (var p in part.ReplicationParams.GetParams())
+            {
+                dataString += ";" + p.Name + ";" + p.Value.ToString("0.0000");
+            }
+
+            sb.AppendLine(dataString);
+
+            foreach (var poly in part.Polygons)
+            {
+                AddPolygonDataToSb(poly, sb);
+            }
+        }
+
+        private void AddPolygonDataToSb(EditorPolygon polygon, StringBuilder sb)
+        {
+            sb.AppendLine(";;;" + "Polygon" + ";" +
+                polygon.PolygonId + ";" +
+                polygon.MaterialType + ";" +
+                polygon.TextureFilename);
+
+            foreach (var vertex in polygon.Vertices)
+            {
+                AddVertexDataToSb(vertex, sb);
+            }
+        }
+
+        private void AddVertexDataToSb(EditorVertex vertex, StringBuilder sb)
+        {
+            sb.AppendLine(";;;;V;" + 
+                vertex.X.ToString("0.0000") + ";" +
+                vertex.Y.ToString("0.0000") + ";" +
+                vertex.Z.ToString("0.0000") + ";" +
+                vertex.U.ToString("0.00000") + ";" +
+                vertex.V.ToString("0.00000"));
+        }
+    }
+}

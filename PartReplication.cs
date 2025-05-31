@@ -157,7 +157,7 @@ namespace ShapeData
 
     public class ReplicationStretchedByDeflection : IPartReplication
     {
-        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.ByFixedIntervals; }
+        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.StretchedByDeflection; }
 
         public readonly IDistancingParams _distancingParams;
 

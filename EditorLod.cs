@@ -23,14 +23,18 @@ namespace ShapeData
             parts = new List<EditorPart>();
         }
 
-        public bool AddPart(EditorPart part)
+        public EditorPart AddPart(EditorPart part)
         {
+            if (part == null)
+                return null;
+            
             if (parts.Find(p => p.PartName == part.PartName) == null)
             {
                 parts.Add(part);
-                return true;
+                return part;
             }
-            return false;
+
+            return null;
         }
 
         public bool DeletePart(string name) =>

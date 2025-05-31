@@ -33,10 +33,18 @@ namespace ShapeData
             polygons = new List<EditorPolygon>();
         }
 
-        public bool AddPolygon(EditorPolygon polygon)
+        public EditorPolygon AddPolygon(EditorPolygon polygon)
         {
-            polygons.Add(polygon);
-            return true;
+            if (polygon == null)
+                return null;
+
+            if (polygons.Find(p => p.PolygonId == polygon.PolygonId) == null)
+            {
+                polygons.Add(polygon);
+                return polygon;
+            }
+            else
+                return null;
         }
 
         public bool DeletePolygon(uint polygonId) =>
