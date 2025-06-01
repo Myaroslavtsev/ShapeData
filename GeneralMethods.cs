@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ShapeData
 {
-    class GeneralMethods
+    static class GeneralMethods
     {
         public static bool RemoveListItems<T>(List<T> list, Predicate<T> condition)
         {
@@ -17,6 +17,18 @@ namespace ShapeData
                 return true;
             }
             return false;
+        }
+
+        public static async Task<string> ReadFileToString(string fileName)
+        {
+            using System.IO.StreamReader reader = new(fileName);
+            return await reader.ReadToEndAsync();
+        }
+
+        public static async Task SaveStringToFile(string fileName, string data)
+        {
+            using System.IO.StreamWriter writer = new(fileName, true);
+            await writer.WriteAsync(data);
         }
     }
 }

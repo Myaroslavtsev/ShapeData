@@ -8,7 +8,7 @@ namespace ShapeData
 {
     class EditorShapeSerializer
     {
-        public string MakeCsvFromEditorShape(EditorShape shape)
+        public static string MakeCsvFromEditorShape(EditorShape shape)
         {
             var sb = new StringBuilder();
 
@@ -19,7 +19,7 @@ namespace ShapeData
             return sb.ToString();
         }
 
-        private void AddShapeDataToSb(EditorShape shape, StringBuilder sb)
+        private static void AddShapeDataToSb(EditorShape shape, StringBuilder sb)
         {
             sb.AppendLine("Shape" + ";" + shape.ShapeName.Replace(';', ':'));
 
@@ -29,7 +29,7 @@ namespace ShapeData
             }
         }
 
-        private void AddLodDataToSb(EditorLod lod, StringBuilder sb)
+        private static void AddLodDataToSb(EditorLod lod, StringBuilder sb)
         {
             sb.AppendLine(";" + "Lod" + ";" + lod.Distance);
 
@@ -39,16 +39,16 @@ namespace ShapeData
             }
         }
 
-        private void AddPartDataToSb(EditorPart part, StringBuilder sb)
+        private static void AddPartDataToSb(EditorPart part, StringBuilder sb)
         {
             var dataString = ";;" + "Part" + ";" +
                 part.PartName + ";" +
                 part.SayIfSmoothed() + ";" +
                 part.ReplicationParams.ReplicationMetod;
 
-            foreach (var p in part.ReplicationParams.GetParams())
+            foreach (var (Name, Value) in part.ReplicationParams.GetParams())
             {
-                dataString += ";" + p.Name + ";" + p.Value.ToString("0.0000");
+                dataString += ";" + Name + ";" + Value.ToString("0.0000");
             }
 
             sb.AppendLine(dataString);
@@ -59,7 +59,7 @@ namespace ShapeData
             }
         }
 
-        private void AddPolygonDataToSb(EditorPolygon polygon, StringBuilder sb)
+        private static void AddPolygonDataToSb(EditorPolygon polygon, StringBuilder sb)
         {
             sb.AppendLine(";;;" + "Polygon" + ";" +
                 polygon.PolygonId + ";" +
@@ -72,7 +72,7 @@ namespace ShapeData
             }
         }
 
-        private void AddVertexDataToSb(EditorVertex vertex, StringBuilder sb)
+        private static void AddVertexDataToSb(EditorVertex vertex, StringBuilder sb)
         {
             sb.AppendLine(";;;;V;" + 
                 vertex.X.ToString("0.0000") + ";" +

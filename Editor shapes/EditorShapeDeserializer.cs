@@ -8,10 +8,10 @@ namespace ShapeData
 {
     class EditorShapeDeserializer
     {
-        public EditorShape MakeShapeFromCsv(string csvData) =>
+        public static EditorShape MakeShapeFromCsv(string csvData) =>
             GetShapeFromCells(SplitCsvToCells(csvData));
 
-        private EditorShape GetShapeFromCells(List<(int emptyCellCount, List<string> line)> cells)
+        private static EditorShape GetShapeFromCells(List<(int emptyCellCount, List<string> line)> cells)
         {
             int lineNumber = SkipLinesWithIncorrectIndents(cells, 0, 0);
 
@@ -22,7 +22,7 @@ namespace ShapeData
             return shape;
         }
 
-        private void AddEditorObjects(List<(int emptyCellCount, List<string> line)> cells,
+        private static void AddEditorObjects(List<(int emptyCellCount, List<string> line)> cells,
             int lineNumber,
             EditorShape shape,
             EditorLod lod,
@@ -50,7 +50,7 @@ namespace ShapeData
 
                 case 3:
                     if (part != null)
-                        part.AddPolygon(GetPolygonFromLine(cells[lineNumber++].line, part.Polygons.Count()));
+                        part.AddPolygon(GetPolygonFromLine(cells[lineNumber++].line, part.Polygons.Count));
                     AddEditorObjects(cells, lineNumber, shape, lod, part, part.Polygons.Last());
                     break;
 
@@ -64,7 +64,7 @@ namespace ShapeData
             }
         }
 
-        private EditorVertex GetVertexFromLine(List<string> line)
+        private static EditorVertex GetVertexFromLine(List<string> line)
         {
             if (!float.TryParse(line[1], out float x)) return null;
             if (!float.TryParse(line[2], out float y)) return null;
@@ -75,12 +75,12 @@ namespace ShapeData
             return new EditorVertex(x, y, z, u, v);
         }
 
-        private EditorPolygon GetPolygonFromLine(List<string> line, int id)
+        private static EditorPolygon GetPolygonFromLine(List<string> line, int id)
         {
             return new EditorPolygon((uint)id, new List<EditorVertex>(), ParseMaterialName(line[2]), line[3]);
         }
 
-        Material ParseMaterialName(string materialName)
+        private static Material ParseMaterialName(string materialName)
         {
             foreach (Material material in Enum.GetValues(typeof(Material)))
             {
@@ -91,14 +91,14 @@ namespace ShapeData
             return Material.SolidNorm;
         }
 
-        private EditorPart GetPartFromLine(List<string> line)
+        private static EditorPart GetPartFromLine(List<string> line)
         {
             return new EditorPart(line[1],
                 ParseReplicationParameters(line),
                 line[2].ToLower() == "smoothed");
         }
 
-        IPartReplication ParseReplicationParameters(List<string> line)
+        private static IPartReplication ParseReplicationParameters(List<string> line)
         {
             switch (line[3].ToLower())
             {
@@ -130,7 +130,7 @@ namespace ShapeData
             return new ReplicationAtFixedPos();
         }
 
-        private EditorLod GetLodFromLine(List<string> line)
+        private static EditorLod GetLodFromLine(List<string> line)
         {
             if (!int.TryParse(line[1], out int distance))
                 return null;
@@ -138,7 +138,7 @@ namespace ShapeData
             return new EditorLod(distance);
         }
 
-        private int SkipLinesWithIncorrectIndents(List<(int emptyCellCount, List<string> line)> cells, int indentCount, int lineNumber)
+        private static int SkipLinesWithIncorrectIndents(List<(int emptyCellCount, List<string> line)> cells, int indentCount, int lineNumber)
         {
             while (cells[lineNumber].emptyCellCount != indentCount)
             {
@@ -151,7 +151,7 @@ namespace ShapeData
             return lineNumber;
         }
 
-        private List<(int emptyCellCount, List<string> cells)> SplitCsvToCells(string csvData)
+        private static List<(int emptyCellCount, List<string> cells)> SplitCsvToCells(string csvData)
         {
             var cells = new List<(int emptyCellCount, List<string> cells)>();
 
@@ -170,7 +170,7 @@ namespace ShapeData
             return cells;
         }
 
-        private (int, List<string>) SplitLine(string line)
+        private static (int, List<string>) SplitLine(string line)
         {
             var cells = line.Split(";").ToList();
 
@@ -189,48 +189,48 @@ namespace ShapeData
             return (emptyCellCount, cells);
         }
 
-        private bool IsValidLine((int emptyCellCount, List<string> cells) line)
+        private static bool IsValidLine((int emptyCellCount, List<string> cells) line)
         {
-            switch (line.emptyCellCount)
+            return line.emptyCellCount switch
             {
-                case 0: return IsValidShapeLine(line.cells);
-                case 1: return IsValidLodLine(line.cells);
-                case 2: return IsValidPartLine(line.cells);
-                case 3: return IsValidPolygonLine(line.cells);
-                case 4: return IsValidVertexLine(line.cells);
-                default: return false;
-            }
+                0 => IsValidShapeLine(line.cells),
+                1 => IsValidLodLine(line.cells),
+                2 => IsValidPartLine(line.cells),
+                3 => IsValidPolygonLine(line.cells),
+                4 => IsValidVertexLine(line.cells),
+                _ => false,
+            };
         }
 
-        private bool IsValidShapeLine(List<string> cells)
+        private static bool IsValidShapeLine(List<string> cells)
         {
             if (cells.Count >= 2 &&
                 cells[0].ToLower() == "shape") return true;
             return false;
         }
 
-        private bool IsValidLodLine(List<string> cells)
+        private static bool IsValidLodLine(List<string> cells)
         {
             if (cells.Count >= 2 &&
                 cells[0].ToLower() == "lod") return true;
             return false;
         }
 
-        private bool IsValidPartLine(List<string> cells)
+        private static bool IsValidPartLine(List<string> cells)
         {
             if (cells.Count >= 4 &&
                 cells[0].ToLower() == "part") return true;
             return false;
         }
 
-        private bool IsValidPolygonLine(List<string> cells)
+        private static bool IsValidPolygonLine(List<string> cells)
         {
             if (cells.Count >= 4 &&
                 cells[0].ToLower() == "polygon") return true;
             return false;
         }
 
-        private bool IsValidVertexLine(List<string> cells)
+        private static bool IsValidVertexLine(List<string> cells)
         {
             if (cells.Count >= 5 &&
                 cells[0].ToLower() == "v") return true;

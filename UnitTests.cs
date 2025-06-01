@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit;
 using NUnit.Framework; // requires NUnit 3.14.0, will upgrade tests later
+using ShapeData.Kuju_tsection.dat;
 //using NUnit.Framework.Legacy; // for NUnit 4.0 and newer
 
 namespace ShapeData
@@ -38,14 +39,11 @@ namespace ShapeData
                 false));
             shape.AddLod(new EditorLod(2000));
 
-            var serializer = new EditorShapeSerializer();
-            var deserializer = new EditorShapeDeserializer();
+            var csv = EditorShapeSerializer.MakeCsvFromEditorShape(shape);
 
-            var csv = serializer.MakeCsvFromEditorShape(shape);
+            //await GeneralMethods.SaveStringToFile("test.csv", csv);
 
-            //await SaveDebugFile("test.csv", csv);
-
-            var deserializedShape = deserializer.MakeShapeFromCsv(csv);
+            var deserializedShape = EditorShapeDeserializer.MakeShapeFromCsv(csv);
 
             Assert.AreEqual(shape.ShapeName, deserializedShape.ShapeName);
             Assert.AreEqual(shape.Lods.Count, deserializedShape.Lods.Count);
@@ -97,12 +95,17 @@ namespace ShapeData
             }
         }
 
-        private async Task SaveDebugFile(string filename, string data)
+        [Test]
+        public async Task LoadTsectionDat()
         {
-            using (System.IO.StreamWriter writer = new System.IO.StreamWriter(filename, true))
-            {
-                await writer.WriteAsync(data);
-            }
+            var tsectionParser = new KujuTsectionParser();
+
+            var td = await KujuTsectionParser.LoadTsection("D:\\Train\\GLOBAL\\tsection.dat");
+
+            // for Okrasa Ghia's tsection.dat build 00038
+            Assert.AreEqual(td.TrackSections.Count, 6050); 
+            Assert.AreEqual(td.TrackShapes.Count, 11859);
         }
+
     }
 }
