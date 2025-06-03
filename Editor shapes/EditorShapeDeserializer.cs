@@ -15,9 +15,12 @@ namespace ShapeData
         {
             int lineNumber = SkipLinesWithIncorrectIndents(cells, 0, 0);
 
-            var shape = new EditorShape(cells[lineNumber++].line[1]);
-
-            AddEditorObjects(cells, lineNumber, shape, null, null, null);
+            var shape = new EditorShape(cells[lineNumber].line[1]);
+            
+            if (cells[lineNumber].line.Count > 2)
+                shape.ShapeComment = cells[lineNumber].line[2];
+            
+            AddEditorObjects(cells, ++lineNumber, shape, null, null, null);
 
             return shape;
         }
@@ -95,36 +98,46 @@ namespace ShapeData
         {
             return new EditorPart(line[1],
                 ParseReplicationParameters(line),
-                line[2].ToLower() == "smoothed");
+                line[2].ToLower() == "smoothed",
+                line[3].ToLower() == "leave");
         }
 
         private static IPartReplication ParseReplicationParameters(List<string> line)
         {
-            switch (line[3].ToLower())
+            switch (line[4].ToLower())
             {
                 case "attheend":
                     return new ReplicationAtTheEnd();
 
                 case "byfixedintervals":
-                    if (!float.TryParse(line[5], out var interval))
+                    if (!float.TryParse(line[6], out var interval))
                         return new ReplicationAtFixedPos();
 
                     return new ReplicationByFixedIntervals(interval);
 
-                case "stretchedbyhorde":
-                    if (!float.TryParse(line[5], out var originalLength))
+                case "byevenintervals":
+                    if (!float.TryParse(line[6], out var minInterval))
                         return new ReplicationAtFixedPos();
 
-                    if (!float.TryParse(line[7], out var minimalLength))
+                    return new ReplicationByEvenIntervals(minInterval);
+
+                case "stretchedByArc":
+                    if (!float.TryParse(line[6], out var originalLength))
                         return new ReplicationAtFixedPos();
 
-                    return new ReplicationStretchedByHorde(originalLength, minimalLength);
+                    if (!float.TryParse(line[8], out var minimalLength))
+                        return new ReplicationAtFixedPos();
+
+                    return new ReplicationStretchedByArc(originalLength, minimalLength);
 
                 case "stretchedbydeflection":
-                    if (!float.TryParse(line[5], out var maxDeflection))
+                    if (!float.TryParse(line[6], out var originalLengthDeflection))
                         return new ReplicationAtFixedPos();
 
-                    return new ReplicationStretchedByDeflection(maxDeflection);
+                    if (!float.TryParse(line[8], out var maxDeflection))
+                        return new ReplicationAtFixedPos();
+
+                    return new ReplicationStretchedByDeflection(originalLengthDeflection, maxDeflection);
             }
 
             return new ReplicationAtFixedPos();
@@ -218,7 +231,7 @@ namespace ShapeData
 
         private static bool IsValidPartLine(List<string> cells)
         {
-            if (cells.Count >= 4 &&
+            if (cells.Count >= 5 &&
                 cells[0].ToLower() == "part") return true;
             return false;
         }

@@ -10,6 +10,7 @@ namespace ShapeData
     {
         // General properties
         public string ShapeName;
+        public string ShapeComment;
 
         // Objects
         private readonly List<EditorLod> lods;

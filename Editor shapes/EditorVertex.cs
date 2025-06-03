@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ShapeData.Geometry;
 
 namespace ShapeData
 {
     public class EditorVertex
     {
         // 3D space position
-        public float X;
-        public float Y;
-        public float Z;
+        public Point Position { get; }
 
         // Texture coordinates
         public float U; // horizontal
@@ -19,9 +18,8 @@ namespace ShapeData
 
         public EditorVertex(float x, float y, float z, float u, float v)
         {
-            X = x;
-            Y = y;
-            Z = z;
+            Position = new Point(x, y, z);
+
             U = u;
             V = v;
         }

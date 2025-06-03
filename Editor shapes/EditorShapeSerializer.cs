@@ -21,7 +21,7 @@ namespace ShapeData
 
         private static void AddShapeDataToSb(EditorShape shape, StringBuilder sb)
         {
-            sb.AppendLine("Shape" + ";" + shape.ShapeName.Replace(';', ':'));
+            sb.AppendLine("Shape" + ";" + shape.ShapeName.Replace(';', ':') + ";" + shape.ShapeComment.Replace(';', ':'));
 
             foreach (var lod in shape.Lods.OrderBy(l => l.Distance))
             {
@@ -43,8 +43,9 @@ namespace ShapeData
         {
             var dataString = ";;" + "Part" + ";" +
                 part.PartName + ";" +
-                part.SayIfSmoothed() + ";" +
-                part.ReplicationParams.ReplicationMetod;
+                part.IsSmoothed() + ";" +
+                part.LeaveAtLeastOne() + ";" +
+                part.ReplicationParams.ReplicationMethod;
 
             foreach (var (Name, Value) in part.ReplicationParams.GetParams())
             {
@@ -75,9 +76,9 @@ namespace ShapeData
         private static void AddVertexDataToSb(EditorVertex vertex, StringBuilder sb)
         {
             sb.AppendLine(";;;;V;" + 
-                vertex.X.ToString("0.0000") + ";" +
-                vertex.Y.ToString("0.0000") + ";" +
-                vertex.Z.ToString("0.0000") + ";" +
+                vertex.Position.X.ToString("0.0000") + ";" +
+                vertex.Position.Y.ToString("0.0000") + ";" +
+                vertex.Position.Z.ToString("0.0000") + ";" +
                 vertex.U.ToString("0.00000") + ";" +
                 vertex.V.ToString("0.00000"));
         }

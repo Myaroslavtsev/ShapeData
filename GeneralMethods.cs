@@ -27,7 +27,7 @@ namespace ShapeData
 
         public static async Task SaveStringToFile(string fileName, string data)
         {
-            using System.IO.StreamWriter writer = new(fileName, true);
+            using System.IO.StreamWriter writer = new(fileName, false);
             await writer.WriteAsync(data);
         }
     }

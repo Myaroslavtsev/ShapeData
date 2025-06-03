@@ -9,7 +9,7 @@ namespace ShapeData
     class KujuTrackShape
     {
         public string FileName { get; private set; }
-
+        public bool RoadShape { get; set; }
         public List<KujuTrackPath> Paths => paths;
 
         private List<KujuTrackPath> paths { get; }

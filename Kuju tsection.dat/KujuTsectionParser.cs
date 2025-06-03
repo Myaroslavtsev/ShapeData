@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ShapeData.Geometry;
 
 namespace ShapeData.Kuju_tsection.dat
 {
@@ -25,15 +26,15 @@ namespace ShapeData.Kuju_tsection.dat
 
     class KujuTsectionParser
     {
-        public static async Task<KujuTsectionDat> LoadTsection(string fileName)
+        public static async Task<KujuTsectionDat> LoadTsection(string fileName, bool skipRoads = true)
         {
             var tsection = new KujuTsectionDat();
 
             var filedata = SimplifySpaces(await GeneralMethods.ReadFileToString(fileName));
 
-            ParseShapesAndSections(GetAllTrackSectionBlocks(filedata), tsection);
+            ParseShapesAndSections(GetAllTrackSectionBlocks(filedata), tsection, skipRoads);
 
-            ParseShapesAndSections(GetAllTrackShapeBlocks(filedata), tsection);
+            ParseShapesAndSections(GetAllTrackShapeBlocks(filedata), tsection, skipRoads);
 
             return tsection;
         }
@@ -48,7 +49,7 @@ namespace ShapeData.Kuju_tsection.dat
             return data;
         }
 
-        private static void ParseShapesAndSections(string trackSections, KujuTsectionDat tsection)
+        private static void ParseShapesAndSections(string trackSections, KujuTsectionDat tsection, bool skipRoads)
         {
             int blockStart = 0;
             var dataBlock = GetDataBlock(trackSections, blockStart);
@@ -59,14 +60,14 @@ namespace ShapeData.Kuju_tsection.dat
                     ParseOneTrackSection(dataBlock.Data, tsection);
 
                 if (dataBlock.Caption == "TrackShape")
-                    ParseOneTrackShape(dataBlock.Data, tsection);
+                    ParseOneTrackShape(dataBlock.Data, tsection, skipRoads);
 
                 blockStart = dataBlock.BlockEnd;
                 dataBlock = GetDataBlock(trackSections, blockStart);
             }
         }
 
-        private static void ParseOneTrackShape(string data, KujuTsectionDat tsection)
+        private static void ParseOneTrackShape(string data, KujuTsectionDat tsection, bool skipRoads)
         {
             var sectionId = ParseSectionId(data);
             if (sectionId == null) return;
@@ -75,7 +76,9 @@ namespace ShapeData.Kuju_tsection.dat
 
             ParseShapeBlocks(data, shape);
 
-            tsection.TrackShapes.Add(shape);
+            if (!tsection.TrackShapes.ContainsKey(shape.FileName) &&
+                !(skipRoads && shape.RoadShape))
+                tsection.TrackShapes.Add(shape.FileName, shape);
         }
 
         private static void ParseShapeBlocks(string data, KujuTrackShape shape)
@@ -92,6 +95,9 @@ namespace ShapeData.Kuju_tsection.dat
                         break;
                     case "sectionidx":
                         ParseSectionIdx(dataBlock.Data, shape, new CultureInfo("en-US"));
+                        break;
+                    case "roadshape":
+                        shape.RoadShape = true;
                         break;
                 }
 
@@ -118,10 +124,10 @@ namespace ShapeData.Kuju_tsection.dat
                     path.TrackSections.Add(id);
                 }
 
-                path.X = dX;
-                path.Y = dY;
-                path.Z = dZ;
-                path.A = dA;
+                path.Direction.X = dX;
+                path.Direction.Y = dY;
+                path.Direction.Z = dZ;
+                path.Direction.A = dA;
 
                 shape.Paths.Add(path);
             }
@@ -135,8 +141,9 @@ namespace ShapeData.Kuju_tsection.dat
             var section = new KujuTrackSection(sectionId.Value);
 
             ParseSectionBlocks(data, section);
-
-            tsection.TrackSections.Add(sectionId.Value, section);
+        
+            if (!tsection.TrackSections.ContainsKey(sectionId.Value))
+                tsection.TrackSections.Add(sectionId.Value, section);
         }
 
         private static int? ParseSectionId(string data)
@@ -180,7 +187,7 @@ namespace ShapeData.Kuju_tsection.dat
                 double.TryParse(values[0], NumberStyles.Any, cultureInfo, out double gauge);
                 double.TryParse(values[1], NumberStyles.Any, cultureInfo, out double straight);
                 section.Gauge = gauge;
-                section.Straight = straight;
+                section.SectionTrajectory.Straight = straight;
             }
         }
 
@@ -191,8 +198,8 @@ namespace ShapeData.Kuju_tsection.dat
             {
                 double.TryParse(values[0], NumberStyles.Any, cultureInfo, out double radius);
                 double.TryParse(values[1], NumberStyles.Any, cultureInfo, out double angle);
-                section.Radius = radius;
-                section.Angle = angle;
+                section.SectionTrajectory.Radius = radius;
+                section.SectionTrajectory.Angle = angle;
             }
         }
 

@@ -24,8 +24,8 @@ namespace ShapeData
         public EditorPart(
             string name,
             IPartReplication replicationParams,
-            bool smoothed = false
-            )
+            bool smoothed = false,
+            bool leaveAtLeastOne = false)
         {
             PartName = name;
             Smoothed = smoothed;
@@ -47,9 +47,24 @@ namespace ShapeData
                 return null;
         }
 
+        public EditorPart Copy(bool setFixedPosReplication)
+        {
+            var copy = setFixedPosReplication ?
+                new EditorPart(PartName, new ReplicationAtFixedPos(), Smoothed, ReplicationParams.LeaveAtLeastOnePart):
+                new EditorPart(PartName, ReplicationParams, Smoothed, ReplicationParams.LeaveAtLeastOnePart);
+
+            foreach (var polygon in polygons)
+            {
+                copy.AddPolygon(polygon.Copy());
+            }
+
+            return copy;
+        }
+
         public bool DeletePolygon(uint polygonId) =>
             GeneralMethods.RemoveListItems(polygons, poly => poly.PolygonId == polygonId);
 
-        public string SayIfSmoothed() => Smoothed ? "Smoothed" : "Unsmoothed";
+        public string IsSmoothed() => Smoothed ? "Smoothed" : "Unsmoothed";
+        public string LeaveAtLeastOne() => ReplicationParams.LeaveAtLeastOnePart ? "Leave" : "NotLeave";
     }
 }

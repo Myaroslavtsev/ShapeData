@@ -11,16 +11,19 @@ namespace ShapeData
         AtFixedPos,
         AtTheEnd,
         ByFixedIntervals,
-        StretchedByHorde,
+        ByEvenIntervals,
+        StretchedByArc,
         StretchedByDeflection
     }
 
     public interface IPartReplication
     {
-        PartReplicationMethod ReplicationMetod {get; }
+        PartReplicationMethod ReplicationMethod {get; }
 
         int GetParamCount();
         IEnumerable<(string Name, float Value)> GetParams();
+
+        bool LeaveAtLeastOnePart { get; set; }
     }
 
     public interface IDistancingParams
@@ -31,7 +34,7 @@ namespace ShapeData
 
     public sealed class NoParams : IDistancingParams
     {
-        public static readonly NoParams Instance = new NoParams();
+        public static readonly NoParams Instance = new();
         private NoParams() { }
 
         public int Count => 0;
@@ -58,12 +61,28 @@ namespace ShapeData
         public int Count => 1;
     }
 
-    public class StretchedByHorde : IDistancingParams
+    public class EvenInterval : IDistancingParams
+    {
+        public float Interval { get; }
+
+        public EvenInterval(float interval)
+        {
+            Interval = interval;
+        }
+
+        public IEnumerable<(string Name, float Value)> GetAll()
+        {
+            yield return ("MinInterval", Interval);
+        }
+        public int Count => 1;
+    }
+
+    public class StretchedByArc : IDistancingParams
     {
         public float OriginalLength { get; }
         public float MinLength { get; }
 
-        public StretchedByHorde(float originalLength, float minLength)
+        public StretchedByArc(float originalLength, float minLength)
         {
             OriginalLength = originalLength;
             MinLength = minLength;
@@ -79,15 +98,18 @@ namespace ShapeData
 
     public class StretchedByDeflection : IDistancingParams
     {
+        public float OriginalLength { get; }
         public float MaxDeflection { get; }
 
-        public StretchedByDeflection(float maxDeflection)
+        public StretchedByDeflection(float originalLength, float maxDeflection)
         {
+            OriginalLength = originalLength;
             MaxDeflection = maxDeflection;
         }
 
         public IEnumerable<(string Name, float Value)> GetAll()
         {
+            yield return ("OriginalLength", OriginalLength);
             yield return ("MaxDeflection", MaxDeflection);
         }
         public int Count => 1;
@@ -95,7 +117,7 @@ namespace ShapeData
 
     public class ReplicationAtFixedPos : IPartReplication
     {
-        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.AtFixedPos; }
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.AtFixedPos; }        
 
         public readonly IDistancingParams _distancingParams;
 
@@ -105,13 +127,13 @@ namespace ShapeData
         }
 
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
-
         public int GetParamCount() => _distancingParams.Count;
+        public bool LeaveAtLeastOnePart { get; set; }
     }
 
     public class ReplicationAtTheEnd : IPartReplication
     {
-        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.AtTheEnd; }
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.AtTheEnd; }
 
         public readonly IDistancingParams _distancingParams;
 
@@ -121,13 +143,13 @@ namespace ShapeData
         }
 
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
-
         public int GetParamCount() => _distancingParams.Count;
+        public bool LeaveAtLeastOnePart { get; set; }
     }
 
     public class ReplicationByFixedIntervals : IPartReplication
     {
-        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.ByFixedIntervals; }
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.ByFixedIntervals; }
 
         public readonly IDistancingParams _distancingParams;
 
@@ -136,37 +158,52 @@ namespace ShapeData
             _distancingParams = new FixedInterval(interval);
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
-
         public int GetParamCount() => _distancingParams.Count;
+        public bool LeaveAtLeastOnePart { get; set; }
     }
 
-    public class ReplicationStretchedByHorde : IPartReplication
+    public class ReplicationByEvenIntervals : IPartReplication
     {
-        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.ByFixedIntervals; }
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.ByEvenIntervals; }
 
         public readonly IDistancingParams _distancingParams;
 
-        public ReplicationStretchedByHorde(float originalLength, float minLength)
+        public ReplicationByEvenIntervals(float interval)
         {
-            _distancingParams = new StretchedByHorde(originalLength, minLength);
+            _distancingParams = new EvenInterval(interval);
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
-
         public int GetParamCount() => _distancingParams.Count;
+        public bool LeaveAtLeastOnePart { get; set; }
+    }
+
+    public class ReplicationStretchedByArc : IPartReplication
+    {
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.StretchedByArc; }
+
+        public readonly IDistancingParams _distancingParams;
+
+        public ReplicationStretchedByArc(float originalLength, float minLength)
+        {
+            _distancingParams = new StretchedByArc(originalLength, minLength);
+        }
+        public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
+        public int GetParamCount() => _distancingParams.Count;
+        public bool LeaveAtLeastOnePart { get; set; }
     }
 
     public class ReplicationStretchedByDeflection : IPartReplication
     {
-        public PartReplicationMethod ReplicationMetod { get => PartReplicationMethod.StretchedByDeflection; }
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.StretchedByDeflection; }
 
         public readonly IDistancingParams _distancingParams;
 
-        public ReplicationStretchedByDeflection(float maxDeflection)
+        public ReplicationStretchedByDeflection(float originalLength, float maxDeflection)
         {
-            _distancingParams = new StretchedByDeflection(maxDeflection);
+            _distancingParams = new StretchedByDeflection(originalLength, maxDeflection);
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
-
         public int GetParamCount() => _distancingParams.Count;
+        public bool LeaveAtLeastOnePart { get; set; }
     }
 }

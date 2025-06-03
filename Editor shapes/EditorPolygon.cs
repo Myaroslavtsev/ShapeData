@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ShapeData.Geometry;
 
 namespace ShapeData
 {
@@ -46,6 +47,16 @@ namespace ShapeData
 
             vertices.Add(vertex);
             return vertex;
+        }
+
+        public EditorPolygon Copy()
+        {
+            var verticesCopy = new List<EditorVertex>();
+
+            foreach (var v in vertices)
+                verticesCopy.Add(new EditorVertex((float)v.Position.X, (float)v.Position.Y, (float)v.Position.Z, v.U, v.V));
+
+            return new EditorPolygon(PolygonId, verticesCopy, MaterialType, TextureFilename);
         }
 
         // to think about: how to block from deleting last 3 points but allow increasing point number

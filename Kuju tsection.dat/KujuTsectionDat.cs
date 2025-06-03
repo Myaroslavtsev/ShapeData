@@ -9,15 +9,15 @@ namespace ShapeData
     class KujuTsectionDat
     {
         public Dictionary<int, KujuTrackSection> TrackSections => trackSections;
-        public List<KujuTrackShape> TrackShapes => trackShapes;
+        public Dictionary<string, KujuTrackShape> TrackShapes => trackShapes;
 
         private Dictionary<int, KujuTrackSection> trackSections { get; }
-        private List<KujuTrackShape> trackShapes { get; }
+        private Dictionary<string, KujuTrackShape> trackShapes { get; }
 
         public KujuTsectionDat()
         {
             trackSections = new Dictionary<int, KujuTrackSection>();
-            trackShapes = new List<KujuTrackShape>();
+            trackShapes = new Dictionary<string, KujuTrackShape>();
         }
     }
 }
