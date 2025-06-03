@@ -189,7 +189,15 @@ namespace ShapeData
             Assert.AreEqual(1d / 3d, dots[3].U, 1e-5); Assert.AreEqual(0, dots[3].V, 1e-5);
             Assert.AreEqual(0, dots[4].U, 1e-5); Assert.AreEqual(0, dots[4].V, 1e-5);
         }
-   
+
+        // Interesting test cases to try:
+        // "A1t10mStrt.s"
+        // "A2t10mStrt.s"
+        // "A1t500r10d.s"
+        // "A2t500r10d.s"
+        // "SR_1tStr_c_005_6m.s" = 5.0m + 0.3m + 0.3m
+        // "SR_2tCrv_c_00150r20d.s"  = 2 x (5d + 5d + 5d + 5d) interesting cases to test
+
         [Test]
         public async Task ReplicationTest()
         {
@@ -206,11 +214,12 @@ namespace ShapeData
                     new EditorVertex(0, 1.7f, 0, 0.5f, 1)
                 }));
 
-            var replicas = ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes["A1t10mStrt.s"], td);
+            var replica = await ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes["SR_2tCrv_c_00150r20d.s"], td);
 
-            // "SR_2tCrv_c_00150r20d.s" interesting case to test
+            var polygons = replica.Lods[0].Parts.Select(p => p.Polygons[0]);
 
-            Assert.AreEqual(replicas, replicas);
+
+            Assert.AreEqual(polygons, polygons;
         } 
     }
 }
