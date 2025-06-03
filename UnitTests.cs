@@ -18,6 +18,14 @@ namespace ShapeData
     {
         const string tsectionPath = "tsection.dat"; // local copy of build 00038 is used // D:\\Train\\GLOBAL\\
 
+        private static Task<KujuTsectionDat> _td;
+
+        private static Task<KujuTsectionDat> GetTsectionDat()
+        {
+            // Инициализация один раз
+            return _td ??= KujuTsectionParser.LoadTsection(tsectionPath);
+        }
+
         [Test]
         public void TwoWayConversionTest() // public async Task TwoWayConversionTest() // for writing to .csv file
         {
@@ -189,15 +197,24 @@ namespace ShapeData
             Assert.AreEqual(1d / 3d, dots[3].U, 1e-5); Assert.AreEqual(0, dots[3].V, 1e-5);
             Assert.AreEqual(0, dots[4].U, 1e-5); Assert.AreEqual(0, dots[4].V, 1e-5);
         }
-   
-        [Test]
-        public async Task ReplicationTest()
+
+        // Interesting test cases to try:
+        // "A1t10mStrt.s"
+        // "A2t10mStrt.s"
+        // "A1t500r10d.s"
+        // "A2t500r10d.s"
+        // "SR_1tStr_c_005_6m.s" = 5.0m + 0.3m + 0.3m
+        // "SR_2tCrv_c_00150r20d.s"  = 2 x (5d + 5d + 5d + 5d) interesting cases to test
+
+        [TestCase("A1t10mStrt.s", "fixed", 0d, 0d, 1)]
+        public async Task ShapeReplicationPartQuantityTest(string shapeName, string repType, float repParam1, float repParam2, int replicaCount)
         {
-            var td = await KujuTsectionParser.LoadTsection(tsectionPath);
+            var td = await GetTsectionDat();
 
             var shape = new EditorShape("simpleShape");
 
-            var part = shape.Lods[0].AddPart(new EditorPart("Plane", new ReplicationAtFixedPos(), false, false));
+            var part = shape.Lods[0].AddPart(
+                new EditorPart("Plane", MakeReplicationParams(repType, repParam1, repParam2), false, false));
 
             part.AddPolygon(new EditorPolygon(0, 
                 new List<EditorVertex> {
@@ -206,11 +223,24 @@ namespace ShapeData
                     new EditorVertex(0, 1.7f, 0, 0.5f, 1)
                 }));
 
-            var replicas = ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes["A1t10mStrt.s"], td);
+            var replica = await ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
 
-            // "SR_2tCrv_c_00150r20d.s" interesting case to test
+            var polygons = replica.Lods[0].Parts.Select(p => p.Polygons[0]).ToList();
 
-            Assert.AreEqual(replicas, replicas);
+            Assert.AreEqual(replicaCount, polygons.Count);
         } 
+
+        private static IPartReplication MakeReplicationParams(string repType, float repParam1, float repParam2)
+        {
+            return repType switch
+            {
+                "AtTheEnd" => new ReplicationAtTheEnd(),
+                "ByFixedIntervals" => new ReplicationByFixedIntervals(repParam1),
+                "ByEvenIntervals" => new ReplicationByEvenIntervals(repParam1),
+                "StretchedByArc" => new ReplicationStretchedByArc(repParam1, repParam2),
+                "StretchedByDeflection" => new ReplicationStretchedByDeflection(repParam1, repParam2),
+                _ => new ReplicationAtFixedPos(),
+            };
+        }
     }
 }

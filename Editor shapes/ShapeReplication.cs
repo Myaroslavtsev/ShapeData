@@ -15,20 +15,24 @@ namespace ShapeData.Editor_shapes
 
             newShape.ShapeComment = editorShape.ShapeComment;
 
-            foreach(var lod in editorShape.Lods)
+            foreach(var oldLod in editorShape.Lods)
             {
-                var newLod = newShape.AddLod(new EditorLod(lod.Distance));
+                var newLod = newShape.AddLod(new EditorLod(oldLod.Distance));
                 
-                foreach(var part in lod.Parts)
+                foreach(var part in oldLod.Parts)
                 {
                     var replicatedParts = ReplicatePart(part, GetSectionsFromShape(trackShape, tsectionDat));
+                    int counter = 0;
 
                     foreach (var replica in replicatedParts)
                         if (replica != null)
+                        {
+                            replica.PartName += '_' + counter;
                             newLod.AddPart(replica);
+                            counter++;
+                        }                            
                 }
             }
-
             return newShape;
         }
 
@@ -101,28 +105,16 @@ namespace ShapeData.Editor_shapes
 
         private static List<EditorPart> ReplicatePart(EditorPart part, List<EditorTrackSection> sections)
         {
-            switch (part.ReplicationParams.ReplicationMethod)
+            return part.ReplicationParams.ReplicationMethod switch
             {
-                case PartReplicationMethod.AtFixedPos:
-                    return ReplicateAtFixedPos(part, sections);
-
-                case PartReplicationMethod.AtTheEnd:
-                    return ReplicateAtTheEnd(part, sections);
-
-                case PartReplicationMethod.ByFixedIntervals:
-                    return ReplicateByFixedIntervals(part, sections);
-
-                case PartReplicationMethod.ByEvenIntervals:
-                    return ReplicateByEvenIntervals(part, sections);
-
-                case PartReplicationMethod.StretchedByArc:
-                    return ReplicateStretchedByArc(part, sections);
-
-                case PartReplicationMethod.StretchedByDeflection:
-                    return ReplicateStretchedByDeflection(part, sections);
-            }
-
-            return null;
+                PartReplicationMethod.AtFixedPos => ReplicateAtFixedPos(part, sections),
+                PartReplicationMethod.AtTheEnd => ReplicateAtTheEnd(part, sections),
+                PartReplicationMethod.ByFixedIntervals => ReplicateByFixedIntervals(part, sections),
+                PartReplicationMethod.ByEvenIntervals => ReplicateByEvenIntervals(part, sections),
+                PartReplicationMethod.StretchedByArc => ReplicateStretchedByArc(part, sections),
+                PartReplicationMethod.StretchedByDeflection => ReplicateStretchedByDeflection(part, sections),
+                _ => null
+            };
         }
 
         private static List<EditorPart> ReplicateAtFixedPos(EditorPart part, List<EditorTrackSection> sections)
