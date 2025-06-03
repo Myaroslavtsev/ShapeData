@@ -16,8 +16,10 @@ namespace ShapeData
  
     public class UnitTests
     {
+        const string tsectionPath = "tsection.dat"; // local copy of build 00038 is used // D:\\Train\\GLOBAL\\
+
         [Test]
-        public void TwoWayConversionTest() // public async Task TwoWayConversionTest() // for writing .csv file
+        public void TwoWayConversionTest() // public async Task TwoWayConversionTest() // for writing to .csv file
         {
             var shape = new EditorShape("TestShape");
             shape.ShapeComment = "Test; comment";
@@ -103,8 +105,8 @@ namespace ShapeData
 
         // for Okrasa Ghia's tsection.dat build 00038
         // without 32 shapes having duplicated file names
-        [TestCase("D:\\Train\\GLOBAL\\tsection.dat", true, 6050, 8709, TestName = "load tsection no roads")] 
-        [TestCase("D:\\Train\\GLOBAL\\tsection.dat", false, 6050, 11827, TestName = "load tsection with roads")] 
+        [TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")] 
+        [TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")] 
         public async Task LoadTsectionDat(string tsectionPath, bool skipRoadShapes, int trackSectionCount, int trackShapeCount)
         {
             var td = await KujuTsectionParser.LoadTsection(tsectionPath, skipRoadShapes);
@@ -145,14 +147,70 @@ namespace ShapeData
             Assert.AreEqual(A1, editorTrackSection.EndDirection.A, 1e-5);
         }
 
+
+        [Test]
+        public void PlaneProjectionTestSimple()
+        {
+            var Polygon = new EditorPolygon(0,
+                new List<EditorVertex> {
+                    new EditorVertex(0, 0, 0, 0, 0),
+                    new EditorVertex(0.2f, 0.2f, 0, 0, 0),
+                    new EditorVertex(-0.2f, 0.4f, 0, 0, 0)
+                });
+
+            var points = Polygon.Vertices.Select(v => v.Position).ToList();
+
+            var dots = Geometry.Geometry.MakeSomeUVcoords(points);
+
+            Assert.AreEqual(0, dots[0].U, 1e-5); Assert.AreEqual(1d, dots[0].V, 1e-5);
+            Assert.AreEqual(2d / 3d, dots[1].U, 1e-5); Assert.AreEqual(1d, dots[1].V, 1e-5);
+            Assert.AreEqual(1d / 3d, dots[2].U, 1e-5); Assert.AreEqual(0, dots[2].V, 1e-5);
+        }
+
+        [Test]
+        public void PlaneProjectionTestDiagonal()
+        {
+            var Polygon = new EditorPolygon(0,
+                new List<EditorVertex> {
+                    new EditorVertex(10, 0, 0, 0, 0),
+                    new EditorVertex(0, 10, 0, 0, 0),
+                    new EditorVertex(-5, 15, 7, 0, 0),
+                    new EditorVertex(5, 5, 12, 0, 0),
+                    new EditorVertex(10, 0, 12, 0, 0)
+                });
+
+            var points = Polygon.Vertices.Select(v => v.Position).ToList();
+
+            var dots = Geometry.Geometry.MakeSomeUVcoords(points);
+
+            Assert.AreEqual(0, dots[0].U, 1e-5); Assert.AreEqual(12d / 15d / Math.Sqrt(2), dots[0].V, 1e-5);
+            Assert.AreEqual(2d / 3d, dots[1].U, 1e-5); Assert.AreEqual(12d / 15d / Math.Sqrt(2), dots[1].V, 1e-5);
+            Assert.AreEqual(1d, dots[2].U, 1e-5); Assert.AreEqual(5d / 15d / Math.Sqrt(2), dots[2].V, 1e-5);
+            Assert.AreEqual(1d / 3d, dots[3].U, 1e-5); Assert.AreEqual(0, dots[3].V, 1e-5);
+            Assert.AreEqual(0, dots[4].U, 1e-5); Assert.AreEqual(0, dots[4].V, 1e-5);
+        }
+   
         [Test]
         public async Task ReplicationTest()
         {
-            var td = await KujuTsectionParser.LoadTsection("D:\\Train\\GLOBAL\\tsection.dat");
+            var td = await KujuTsectionParser.LoadTsection(tsectionPath);
 
-            var section = ShapeReplication.GetSectionsFromShape(td.TrackShapes["SR_2tCrv_c_00150r20d.s"], td);
+            var shape = new EditorShape("simpleShape");
 
-            Assert.AreEqual(section, section);
-        }
+            var part = shape.Lods[0].AddPart(new EditorPart("Plane", new ReplicationAtFixedPos(), false, false));
+
+            part.AddPolygon(new EditorPolygon(0, 
+                new List<EditorVertex> {
+                    new EditorVertex(-1.2f, 0, 0, 0, 0),
+                    new EditorVertex(1.2f, 0, 0, 1, 0),
+                    new EditorVertex(0, 1.7f, 0, 0.5f, 1)
+                }));
+
+            var replicas = ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes["A1t10mStrt.s"], td);
+
+            // "SR_2tCrv_c_00150r20d.s" interesting case to test
+
+            Assert.AreEqual(replicas, replicas);
+        } 
     }
 }

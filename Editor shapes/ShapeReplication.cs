@@ -32,8 +32,7 @@ namespace ShapeData.Editor_shapes
             return newShape;
         }
 
-        // private
-        public static List<EditorTrackSection> GetSectionsFromShape(KujuTrackShape trackShape, KujuTsectionDat tsectionDat)
+        private static List<EditorTrackSection> GetSectionsFromShape(KujuTrackShape trackShape, KujuTsectionDat tsectionDat)
         {
             var extractedSections = new List<EditorTrackSection>();
 

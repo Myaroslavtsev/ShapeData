@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
 
 namespace ShapeData.Geometry
 {
@@ -10,6 +11,9 @@ namespace ShapeData.Geometry
     {
         public static Direction FindEndDirection(Trajectory trajectory, Direction startDirection)
         {
+            // Из какой точки в каком направлении будет смотреть вектор направления,
+            // если из начального направления пройти по заданной траектории
+
             // 0. Перевод угла в радианы
             double startAngle = Deg2Rad(startDirection.A);
 
@@ -70,6 +74,83 @@ namespace ShapeData.Geometry
                 point.Z = Math.Sin(angle) * (radius + point.X);
             }
         }
+
+        public static List<(double U, double V)> MakeSomeUVcoords(List<Point> points) =>        
+            ScaleToUnitSquare(ProjectPointsToPlane(points, MakePlaneFromFirstPoints(points)));        
+
+        private static PlaneVectors MakePlaneFromFirstPoints(List<Point> points)
+        {
+            if (points == null || points.Count < 3)
+                throw new ArgumentException("At least 3 points required to set a plane.");
+
+            var origin = ToVector(points[0]);   // Центр координат
+            var uDir = Vector3.Normalize(ToVector(points[1]) - origin); // Направление оси U
+
+            // Вектор, задающий наклон плоскости
+            var tiltVec = ToVector(points[2]) - origin;
+
+            // Вектор нормали к плоскости
+            var normal = Vector3.Normalize(Vector3.Cross(uDir, tiltVec));
+
+            // Направление оси V — перпендикулярно U и normal (против часовой стрелки)
+            var vDir = Vector3.Normalize(Vector3.Cross(uDir, normal));
+
+            return new PlaneVectors(origin, uDir, vDir, normal);
+        }
+
+        private static List<(double U, double V)> ProjectPointsToPlane(List<Point> points, PlaneVectors plane)
+        {
+            var result = new List<(double U, double V)>();
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                var p = ToVector(points[i]);
+                var vecToP = p - plane.Origin;
+
+                // Проекция вектора на плоскость через вычитание компоненты вдоль нормали
+                var distanceToPlane = Vector3.Dot(vecToP, plane.Normal);
+                var projection = p - distanceToPlane * plane.Normal;
+                var projectedVec = projection - plane.Origin;
+
+                // Координаты в системе U-V
+                double u = Vector3.Dot(projectedVec, plane.Xdir);
+                double v = Vector3.Dot(projectedVec, plane.Ydir);
+
+                result.Add((u, v));
+            }
+
+            return result;
+        }
+
+
+        private static List<(double U, double V)> ScaleToUnitSquare(List<(double U, double V)> dots)
+        {
+            var minU = double.MaxValue;
+            var minV = double.MaxValue;
+            var maxU = double.MinValue;
+            var maxV = double.MinValue;
+
+            foreach (var (U, V) in dots)
+            {
+                if (U < minU) minU = U;
+                if (V < minV) minV = V;
+                if (U > maxU) maxU = U;
+                if (V > maxV) maxV = V;
+            }
+
+            var maxBound = Math.Max(maxU - minU, maxV - minV);
+            if (maxBound < 1e-3)
+                maxBound = 1;
+
+            var result = new List<(double U, double V)> ();
+
+            foreach (var (U, V) in dots)
+                result.Add(((U - minU) / maxBound, (V - minV) / maxBound));
+
+            return result;            
+        }
+
+        private static Vector3 ToVector(Point p) => new((float)p.X, (float)p.Y, (float)p.Z);
 
         public static double Deg2Rad(double degrees) => degrees * Math.PI / 180;
 

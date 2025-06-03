@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
 
 namespace ShapeData.Geometry
 {
@@ -65,6 +66,22 @@ namespace ShapeData.Geometry
                 else
                     return Radius * Angle * Math.PI / 180;
             }
+        }
+    }
+
+    public class PlaneVectors
+    {
+        public Vector3 Origin;
+        public Vector3 Xdir;
+        public Vector3 Ydir;
+        public Vector3 Normal;
+
+        public PlaneVectors(Vector3 origin, Vector3 xdir, Vector3 ydir, Vector3 normal)
+        {
+            Origin = origin;
+            Xdir = xdir;
+            Ydir = ydir;
+            Normal = normal;
         }
     }
 }
