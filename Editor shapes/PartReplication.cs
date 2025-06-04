@@ -153,9 +153,10 @@ namespace ShapeData
 
         public readonly IDistancingParams _distancingParams;
 
-        public ReplicationByFixedIntervals(float interval)
+        public ReplicationByFixedIntervals(float interval, bool leaveAtLeastOne = false)
         {
             _distancingParams = new FixedInterval(interval);
+            LeaveAtLeastOnePart = leaveAtLeastOne;
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
         public int GetParamCount() => _distancingParams.Count;
@@ -168,9 +169,10 @@ namespace ShapeData
 
         public readonly IDistancingParams _distancingParams;
 
-        public ReplicationByEvenIntervals(float interval)
+        public ReplicationByEvenIntervals(float interval, bool leaveAtLeastOne = false)
         {
             _distancingParams = new EvenInterval(interval);
+            LeaveAtLeastOnePart = leaveAtLeastOne;
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
         public int GetParamCount() => _distancingParams.Count;
@@ -183,9 +185,10 @@ namespace ShapeData
 
         public readonly IDistancingParams _distancingParams;
 
-        public ReplicationStretchedByArc(float originalLength, float minLength)
+        public ReplicationStretchedByArc(float originalLength, float minLength, bool leaveAtLeastOne = false)
         {
             _distancingParams = new StretchedByArc(originalLength, minLength);
+            LeaveAtLeastOnePart = leaveAtLeastOne;
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
         public int GetParamCount() => _distancingParams.Count;
@@ -198,9 +201,10 @@ namespace ShapeData
 
         public readonly IDistancingParams _distancingParams;
 
-        public ReplicationStretchedByDeflection(float originalLength, float maxDeflection)
+        public ReplicationStretchedByDeflection(float originalLength, float maxDeflection, bool leaveAtLeastOne = false)
         {
             _distancingParams = new StretchedByDeflection(originalLength, maxDeflection);
+            LeaveAtLeastOnePart = leaveAtLeastOne;
         }
         public IEnumerable<(string Name, float Value)> GetParams() => _distancingParams.GetAll();
         public int GetParamCount() => _distancingParams.Count;

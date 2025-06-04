@@ -55,9 +55,13 @@ namespace ShapeData.Geometry
         {
             var rotAngle = -Deg2Rad(direction.A);
 
-            point.X = direction.X + point.X * Math.Cos(rotAngle) - point.Z * Math.Sin(rotAngle);
-            point.Y = direction.Y + point.Y;
-            point.Z = direction.Z + point.X * Math.Sin(rotAngle) + point.Z * Math.Cos(rotAngle);
+            var newX = direction.X + point.X * Math.Cos(rotAngle) - point.Z * Math.Sin(rotAngle);
+            var newY = direction.Y + point.Y;
+            var newZ = direction.Z + point.X * Math.Sin(rotAngle) + point.Z * Math.Cos(rotAngle);
+
+            point.X = newX;
+            point.Y = newY;
+            point.Z = newZ;
         }
 
         public static void BendPoint(Point point, Trajectory trajectory, double scaleFactor)
@@ -70,8 +74,11 @@ namespace ShapeData.Geometry
 
                 double angle = point.Z * scaleFactor / radius;
 
-                point.X = (radius - Math.Cos(angle) * (radius + point.X)) * Math.Sign(trajectory.Angle);
-                point.Z = Math.Sin(angle) * (radius + point.X);
+                var newX = (radius - Math.Cos(angle) * (radius + point.X)) * Math.Sign(trajectory.Angle);
+                var newZ = Math.Sin(angle) * (radius + point.X);
+
+                point.X = newX;
+                point.Z = newZ;
             }
         }
 

@@ -24,8 +24,7 @@ namespace ShapeData
         public EditorPart(
             string name,
             IPartReplication replicationParams,
-            bool smoothed = false,
-            bool leaveAtLeastOne = false)
+            bool smoothed = false)
         {
             PartName = name;
             Smoothed = smoothed;
@@ -50,8 +49,8 @@ namespace ShapeData
         public EditorPart Copy(bool setFixedPosReplication)
         {
             var copy = setFixedPosReplication ?
-                new EditorPart(PartName, new ReplicationAtFixedPos(), Smoothed, ReplicationParams.LeaveAtLeastOnePart):
-                new EditorPart(PartName, ReplicationParams, Smoothed, ReplicationParams.LeaveAtLeastOnePart);
+                new EditorPart(PartName, new ReplicationAtFixedPos(), Smoothed):
+                new EditorPart(PartName, ReplicationParams, Smoothed);
 
             foreach (var polygon in polygons)
             {

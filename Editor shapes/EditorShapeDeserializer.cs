@@ -96,10 +96,14 @@ namespace ShapeData
 
         private static EditorPart GetPartFromLine(List<string> line)
         {
-            return new EditorPart(line[1],
+            var part = new EditorPart(line[1],
                 ParseReplicationParameters(line),
-                line[2].ToLower() == "smoothed",
-                line[3].ToLower() == "leave");
+                line[2].ToLower() == "smoothed");
+
+            if (line[3].ToLower() == "leave")
+                part.ReplicationParams.LeaveAtLeastOnePart = true;
+
+            return part;
         }
 
         private static IPartReplication ParseReplicationParameters(List<string> line)
