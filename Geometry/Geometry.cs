@@ -48,7 +48,7 @@ namespace ShapeData.Geometry
             return new Direction(Xend, startDirection.Y, Zend, Aend);
         }
 
-        public static void TransposePoint(Point point, Direction direction)
+        public static Vector3 TransposePoint(Vector3 point, Direction direction)
         {
             var rotAngle = -Deg2Rad(direction.A);
 
@@ -56,15 +56,13 @@ namespace ShapeData.Geometry
             var newY = direction.Y + point.Y;
             var newZ = direction.Z + point.X * Math.Sin(rotAngle) + point.Z * Math.Cos(rotAngle);
 
-            point.X = newX;
-            point.Y = newY;
-            point.Z = newZ;
+            return new Vector3((float)newX, (float)newY, (float)newZ);
         }
 
-        public static void BendPoint(Point point, Trajectory trajectory, double scaleFactor)
+        public static Vector3 BendPoint(Vector3 point, Trajectory trajectory, double scaleFactor)
         {
             if (trajectory.Radius == 0)
-                point.Z *= scaleFactor;
+                return new Vector3(point.X, point.Y, (float)(point.Z * scaleFactor));
             else
             {
                 double radius = trajectory.Radius;
@@ -74,24 +72,23 @@ namespace ShapeData.Geometry
                 var newX = (radius - Math.Cos(angle) * (radius + point.X)) * Math.Sign(trajectory.Angle);
                 var newZ = Math.Sin(angle) * (radius + point.X);
 
-                point.X = newX;
-                point.Z = newZ;
+                return new Vector3((float)newX, point.Y, (float)newZ);
             }
         }
 
-        public static List<(double U, double V)> MakeSomeUVcoords(List<Point> points) =>
+        public static List<(double U, double V)> MakeSomeUVcoords(List<Vector3> points) =>
             ScaleToUnitSquare(ProjectPointsToPlane(points, MakePlaneFromFirstPoints(points)));
 
-        private static PlaneVectors MakePlaneFromFirstPoints(List<Point> points)
+        private static PlaneVectors MakePlaneFromFirstPoints(List<Vector3> points)
         {
             if (points == null || points.Count < 3)
                 throw new ArgumentException("At least 3 points required to set a plane.");
 
-            var origin = ToVector(points[0]);   // Центр координат
-            var uDir = Vector3.Normalize(ToVector(points[1]) - origin); // Направление оси U
+            var origin = points[0];   // Центр координат
+            var uDir = Vector3.Normalize(points[1] - origin); // Направление оси U
 
             // Вектор, задающий наклон плоскости
-            var tiltVec = ToVector(points[2]) - origin;
+            var tiltVec = points[2] - origin;
 
             // Вектор нормали к плоскости
             var normal = Vector3.Normalize(Vector3.Cross(uDir, tiltVec));
@@ -102,18 +99,17 @@ namespace ShapeData.Geometry
             return new PlaneVectors(origin, uDir, vDir, normal);
         }
 
-        private static List<(double U, double V)> ProjectPointsToPlane(List<Point> points, PlaneVectors plane)
+        private static List<(double U, double V)> ProjectPointsToPlane(List<Vector3> points, PlaneVectors plane)
         {
             var result = new List<(double U, double V)>();
 
             for (int i = 0; i < points.Count; i++)
             {
-                var p = ToVector(points[i]);
-                var vecToP = p - plane.Origin;
+                var vecToP = points[i] - plane.Origin;
 
                 // Проекция вектора на плоскость через вычитание компоненты вдоль нормали
                 var distanceToPlane = Vector3.Dot(vecToP, plane.Normal);
-                var projection = p - distanceToPlane * plane.Normal;
+                var projection = points[i] - distanceToPlane * plane.Normal;
                 var projectedVec = projection - plane.Origin;
 
                 // Координаты в системе U-V
@@ -125,7 +121,6 @@ namespace ShapeData.Geometry
 
             return result;
         }
-
 
         private static List<(double U, double V)> ScaleToUnitSquare(List<(double U, double V)> dots)
         {
@@ -153,8 +148,6 @@ namespace ShapeData.Geometry
 
             return result;
         }
-
-        private static Vector3 ToVector(Point p) => new((float)p.X, (float)p.Y, (float)p.Z);
 
         public static double Deg2Rad(double degrees) => degrees * Math.PI / 180;
 

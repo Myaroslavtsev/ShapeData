@@ -3,27 +3,6 @@ using System.Numerics;
 
 namespace ShapeData.Geometry
 {
-    public class Point
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
-
-        public Point(double x = 0, double y = 0, double z = 0)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
-
-        public void ReplaceBy(Point point)
-        {
-            X = point.X;
-            Y = point.Y;
-            Z = point.Z;
-        }
-    }
-
     public class Direction // Вектор в 3D-пространстве, направленный в плоскости X-Z под углом A к оси Z
     {
         public double X { get; set; }

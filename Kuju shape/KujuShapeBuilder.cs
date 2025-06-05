@@ -11,6 +11,8 @@ namespace ShapeData.Kuju_shape
 {
     class KujuShapeBuilder
     {
+        const float boundingBoxMargin = 0.5f;
+
         private const string newLine = "\r\n";
         private const string tab = "	";
         private const string simisa = "SIMISA@@@@@@@@@@JINX0s1t______";
@@ -25,14 +27,14 @@ namespace ShapeData.Kuju_shape
             );
         }
 
-        private static string AssembleShapeFileParts(EditorShape shape, (Point, Point) bb)
+        private static string AssembleShapeFileParts(EditorShape shape, (Vector3, Vector3) bb)
         {
             var sb = new StringBuilder();
 
             sb.Append(AddShapeStart());
             sb.Append(AddShapeHeader());
             sb.Append(AddShapeVolumes(bb));
-            sb.Append(AddShapeShaderNames());
+            /*sb.Append(AddShapeShaderNames());
             sb.Append(AddShapeTextureFilterNames());
             sb.Append(AddShapePoints());
             sb.Append(AddShapeUvPoints());
@@ -44,7 +46,7 @@ namespace ShapeData.Kuju_shape
             sb.Append(AddShapeLightMaterialsAndConfigs());
             sb.Append(AddShapeVertexStates());
             sb.Append(AddShapePrimStates());
-            sb.Append(AddShapeLodControls());
+            sb.Append(AddShapeLodControls());*/
             sb.Append(AddShapeFinish());
 
             return sb.ToString();
@@ -52,7 +54,7 @@ namespace ShapeData.Kuju_shape
 
         private static string AssembleShapeDefinitionParts(
             EditorShape shape, 
-            (Point, Point) bb,
+            (Vector3, Vector3) bb,
             bool prohibitVisualObstruction = false,
             bool hasWinterTextures = false)
         {
@@ -68,61 +70,52 @@ namespace ShapeData.Kuju_shape
             return sb.ToString();
         }
 
-        private static (Point, Point) GetBoundingBox(EditorShape shape)
-        {
-            const double margin = 0.5d;
-
-            var minPoint = new Point(double.MaxValue, double.MaxValue, double.MaxValue);
-            var maxPoint = new Point(double.MinValue, double.MinValue, double.MinValue);
+        private static (Vector3, Vector3) GetBoundingBox(EditorShape shape)
+        {            
+            var minX = float.MaxValue;
+            var minY = float.MaxValue;
+            var minZ = float.MaxValue;
+            var maxX = float.MinValue;
+            var maxY = float.MinValue;
+            var maxZ = float.MinValue;
 
             foreach(var lod in shape.Lods)
                 foreach(var part in lod.Parts)
                     foreach(var poly in part.Polygons)
                         foreach(var v in poly.Vertices)
                         {
-                            if (v.Position.X > maxPoint.X) maxPoint.X = v.Position.X;
-                            if (v.Position.X < minPoint.X) minPoint.X = v.Position.X;
-                            if (v.Position.Y > maxPoint.Y) maxPoint.Y = v.Position.Y;
-                            if (v.Position.Y < minPoint.Y) minPoint.Y = v.Position.Y;
-                            if (v.Position.Z > maxPoint.Z) maxPoint.Z = v.Position.Z;
-                            if (v.Position.Z < minPoint.Z) minPoint.Z = v.Position.Z;
+                            if (v.Position.X > maxX) maxX = v.Position.X;
+                            if (v.Position.X < minX) minX = v.Position.X;
+                            if (v.Position.Y > maxY) maxY = v.Position.Y;
+                            if (v.Position.Y < minY) minY = v.Position.Y;
+                            if (v.Position.Z > maxZ) maxZ = v.Position.Z;
+                            if (v.Position.Z < minZ) minZ = v.Position.Z;
                         }
 
-            maxPoint.X += margin;
-            maxPoint.Y += margin;
-            maxPoint.Z += margin;
-            minPoint.X -= margin;
-            minPoint.Y -= margin;
-            minPoint.Z -= margin;
+            maxX += boundingBoxMargin;
+            maxY += boundingBoxMargin;
+            maxZ += boundingBoxMargin;
+            minX -= boundingBoxMargin;
+            minY -= boundingBoxMargin;
+            minZ -= boundingBoxMargin;
 
-            return (minPoint, maxPoint);
+            return (new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
         }
 
-        private static string AddShapeVolumes((Point minPoint, Point maxPoint) bb)
+        private static string AddShapeVolumes((Vector3 minPoint, Vector3 maxPoint) bb)
         {
-            Vector3 min = new Vector3(0, 0, 0);
-            Vector3 max = new Vector3(0, 0, 0);
-
-
-            var sum = min - max;
-
-            var sumX = bb.maxPoint.X + bb.minPoint.X;
-            var sumY = bb.maxPoint.Y + bb.minPoint.Y;
-            var sumZ = bb.maxPoint.Z + bb.minPoint.Z;
-
-            var dX = bb.maxPoint.X - bb.minPoint.X;
-            var dY = bb.maxPoint.Y - bb.minPoint.Y;
-            var dZ = bb.maxPoint.Z - bb.minPoint.Z;
+            var sum = bb.minPoint + bb.maxPoint;
+            var delta = bb.maxPoint - bb.minPoint;
 
             return Tabs(1) + "volumes ( 1" + newLine +
                 Tabs(2) + "vol_sphere (" + newLine +
-                Tabs(3) + "vector ( " + 0.5 * sumX + " " + 0.5 * sumY + " " + 0.5 * sumZ + " ) " +
-                Math.Sqrt(0.5 * (dX*dX + dY*dY + dZ*dZ)) + newLine +
+                Tabs(3) + "vector ( " + 0.5 * sum.X + " " + 0.5 * sum.Y + " " + 0.5 * sum.Z + " ) " + 
+                0.5 * delta.Length() + newLine +
                 Tabs(2) + ")" + newLine +
                 Tabs(1) + ")" + newLine;
          }
 
-        private static string AddBoundingBox((Point minPoint, Point maxPoint) bb, bool prohibitVisualObstruction)
+        private static string AddBoundingBox((Vector3 minPoint, Vector3 maxPoint) bb, bool prohibitVisualObstruction)
         {
             if (prohibitVisualObstruction)
                 return Tabs(1) + "ESD_No_Visual_Obstruction ()" + newLine;

@@ -13,7 +13,7 @@ namespace ShapeData.Editor_shapes
             foreach (var poly in part.Polygons)
             {
                 foreach (var v in poly.Vertices)
-                    Geometry.Geometry.TransposePoint(v.Position, direction);
+                    v.Position = Geometry.Geometry.TransposePoint(v.Position, direction);
             }
 
             return part;
@@ -33,7 +33,7 @@ namespace ShapeData.Editor_shapes
             foreach (var poly in part.Polygons)
             {
                 foreach (var v in poly.Vertices)
-                    Geometry.Geometry.BendPoint(v.Position, trajectory, scaleFactor);
+                    v.Position = Geometry.Geometry.BendPoint(v.Position, trajectory, scaleFactor);
             }
 
             return part;
