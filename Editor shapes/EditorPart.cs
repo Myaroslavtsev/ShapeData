@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -49,7 +45,7 @@ namespace ShapeData
         public EditorPart Copy(bool setFixedPosReplication)
         {
             var copy = setFixedPosReplication ?
-                new EditorPart(PartName, new ReplicationAtFixedPos(), Smoothed):
+                new EditorPart(PartName, new ReplicationAtFixedPos(), Smoothed) :
                 new EditorPart(PartName, ReplicationParams, Smoothed);
 
             foreach (var polygon in polygons)

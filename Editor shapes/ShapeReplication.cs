@@ -1,9 +1,6 @@
-﻿using System;
+﻿using ShapeData.Geometry;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using ShapeData.Geometry;
 
 namespace ShapeData.Editor_shapes
 {
@@ -11,15 +8,15 @@ namespace ShapeData.Editor_shapes
     {
         public static async Task<EditorShape> ReplicatePartsInShape(EditorShape editorShape, KujuTrackShape trackShape, KujuTsectionDat tsectionDat)
         {
-            var newShape = new EditorShape(editorShape.ShapeName);
+            var newShape = new EditorShape(trackShape.FileName);
 
             newShape.ShapeComment = editorShape.ShapeComment;
 
-            foreach(var oldLod in editorShape.Lods)
+            foreach (var oldLod in editorShape.Lods)
             {
                 var newLod = newShape.AddLod(new EditorLod(oldLod.Distance));
-                
-                foreach(var part in oldLod.Parts)
+
+                foreach (var part in oldLod.Parts)
                 {
                     var replicatedParts = ReplicatePart(part, GetSectionsFromShape(trackShape, tsectionDat));
                     int counter = 0;
@@ -30,7 +27,7 @@ namespace ShapeData.Editor_shapes
                             replica.PartName += '_' + counter;
                             newLod.AddPart(replica);
                             counter++;
-                        }                            
+                        }
                 }
             }
             return newShape;
@@ -121,9 +118,9 @@ namespace ShapeData.Editor_shapes
         {
             var parts = new List<EditorPart>();
 
-            foreach(var section in sections)
+            foreach (var section in sections)
             {
-                parts.Add(PartTransformer.TransposePart(part.Copy(true), section.StartDirection)); 
+                parts.Add(PartTransformer.TransposePart(part.Copy(true), section.StartDirection));
             }
 
             return parts;
@@ -175,7 +172,7 @@ namespace ShapeData.Editor_shapes
             {
                 var partialTrajectory = PartTransformer.GetPartialTrajectoryByArc(section, part.ReplicationParams);
 
-                var segment = PartTransformer.BendPart(part.Copy(true), partialTrajectory, part.ReplicationParams); 
+                var segment = PartTransformer.BendPart(part.Copy(true), partialTrajectory, part.ReplicationParams);
 
                 foreach (var direction in PartTransformer.SplitSectionByEvenArcs(section, part.ReplicationParams))
                     parts.Add(PartTransformer.TransposePart(segment.Copy(true), direction));
@@ -183,14 +180,14 @@ namespace ShapeData.Editor_shapes
 
             return parts;
         }
-        
+
         private static List<EditorPart> ReplicateStretchedByDeflection(EditorPart part, List<EditorTrackSection> sections)
         {
             var parts = new List<EditorPart>();
 
             foreach (var section in sections)
             {
-                var partialTrajectory = PartTransformer.GetPartialTrajectoryByDeflection(section, part.ReplicationParams); 
+                var partialTrajectory = PartTransformer.GetPartialTrajectoryByDeflection(section, part.ReplicationParams);
 
                 var segment = PartTransformer.BendPart(part.Copy(true), partialTrajectory, part.ReplicationParams);
 

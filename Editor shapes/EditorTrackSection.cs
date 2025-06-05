@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ShapeData.Geometry;
+﻿using ShapeData.Geometry;
 
 namespace ShapeData.Editor_shapes
 {
@@ -15,7 +10,7 @@ namespace ShapeData.Editor_shapes
         public Trajectory SectionTrajectory { get; }
 
         public EditorTrackSection()
-        {           
+        {
             StartDirection = new Direction();
             EndDirection = new Direction();
             SectionTrajectory = new Trajectory();
@@ -25,7 +20,7 @@ namespace ShapeData.Editor_shapes
         {
             SectionTrajectory = trajectory;
             StartDirection = startDirection;
-            EndDirection = Geometry.Geometry.FindEndDirection(trajectory, startDirection);            
+            EndDirection = Geometry.Geometry.FindEndDirection(trajectory, startDirection);
         }
     }
 }

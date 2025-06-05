@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using ShapeData.Geometry;
 
 namespace ShapeData.Kuju_tsection.dat
 {
@@ -141,7 +137,7 @@ namespace ShapeData.Kuju_tsection.dat
             var section = new KujuTrackSection(sectionId.Value);
 
             ParseSectionBlocks(data, section);
-        
+
             if (!tsection.TrackSections.ContainsKey(sectionId.Value))
                 tsection.TrackSections.Add(sectionId.Value, section);
         }
@@ -242,17 +238,17 @@ namespace ShapeData.Kuju_tsection.dat
         private static DataBlock GetDataBlock(string file, int startPos)
         {
             var (blockName, bracketPos) = FindDataBloskStart(file, startPos);
-            if (bracketPos < 0) 
-                return new DataBlock ("", "", -1);
+            if (bracketPos < 0)
+                return new DataBlock("", "", -1);
 
             var endPos = FindDataBlockEnd(file, bracketPos);
 
             if (endPos > bracketPos)
-                return new DataBlock (blockName.Trim(),
+                return new DataBlock(blockName.Trim(),
                     file[(bracketPos + 1)..(endPos - 1)].Trim(),
                     endPos);
 
-            return new DataBlock ("", "", -1);
+            return new DataBlock("", "", -1);
         }
 
         private static (string blockName, int bracketPos) FindDataBloskStart(string file, int startPos)
@@ -261,7 +257,7 @@ namespace ShapeData.Kuju_tsection.dat
 
             while (lineStartPos < file.Length && lineStartPos >= 0)
             {
-                var lineEndPos = file.IndexOf("\r\n", lineStartPos+1, StringComparison.OrdinalIgnoreCase);
+                var lineEndPos = file.IndexOf("\r\n", lineStartPos + 1, StringComparison.OrdinalIgnoreCase);
 
                 if (lineEndPos < 0)
                     lineEndPos = file.Length;
@@ -269,7 +265,7 @@ namespace ShapeData.Kuju_tsection.dat
                 var bracketPos = file.IndexOf('(', lineStartPos, lineEndPos - lineStartPos);
 
                 if (bracketPos > lineStartPos)
-                    return (file.Substring(lineStartPos+2, bracketPos - lineStartPos - 2).TrimEnd(), bracketPos);
+                    return (file.Substring(lineStartPos + 2, bracketPos - lineStartPos - 2).TrimEnd(), bracketPos);
 
                 lineStartPos = lineEndPos;
             }
@@ -280,14 +276,14 @@ namespace ShapeData.Kuju_tsection.dat
         private static int FindDataBlockEnd(string file, int bracketPos)
         {
             var bracketCount = 1;
-            
+
             while (bracketPos++ < file.Length && bracketCount > 0)
             {
                 if (file[bracketPos] == '(')
                     bracketCount++;
 
                 if (file[bracketPos] == ')')
-                    bracketCount--; 
+                    bracketCount--;
             }
 
             return bracketPos;

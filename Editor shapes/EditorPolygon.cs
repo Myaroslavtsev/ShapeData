@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ShapeData.Geometry;
+﻿using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -31,7 +26,7 @@ namespace ShapeData
         public EditorPolygon(
             uint polygonId,
             List<EditorVertex> vertexList,
-            Material material = Material.SolidNorm, 
+            Material material = Material.SolidNorm,
             string textureName = "blank.ace")
         {
             PolygonId = polygonId;

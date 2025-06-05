@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Numerics;
 
 namespace ShapeData.Geometry
@@ -60,7 +56,8 @@ namespace ShapeData.Geometry
 
         public double Length
         {
-            get {
+            get
+            {
                 if (Radius == 0)
                     return Straight;
                 else

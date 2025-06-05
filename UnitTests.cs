@@ -1,19 +1,17 @@
-﻿using System;
+﻿using NUnit.Framework; // requires NUnit 3.14.0, will upgrade tests later
+using ShapeData.Editor_shapes;
+using ShapeData.Geometry;
+using ShapeData.Kuju_tsection.dat;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using NUnit;
-using NUnit.Framework; // requires NUnit 3.14.0, will upgrade tests later
-using ShapeData.Kuju_tsection.dat;
-using ShapeData.Geometry;
-using ShapeData.Editor_shapes;
 //using NUnit.Framework.Legacy; // for NUnit 4.0 and newer
 
 namespace ShapeData
 {
     [TestFixture]
- 
+
     public class UnitTests
     {
         const string tsectionPath = "tsection.dat"; // local copy of build 00038 is used // D:\\Train\\GLOBAL\\
@@ -35,8 +33,8 @@ namespace ShapeData
                 "TestPart",
                 new ReplicationAtFixedPos(),
                 true));
-            newLod.Parts[0].AddPolygon(new EditorPolygon(0, 
-                new List<EditorVertex> { 
+            newLod.Parts[0].AddPolygon(new EditorPolygon(0,
+                new List<EditorVertex> {
                     new EditorVertex(0.1001f, 0.2f, 0.3f, 0.4f, 0.5f),
                     new EditorVertex(1.1f, 1.2f, 1.3f, 1.4f, 1.5f),
                     new EditorVertex(2.1f, 2.2f, 2.3f, 2.4f, 2.5f)
@@ -63,22 +61,22 @@ namespace ShapeData
 
             for (var lod = 0; lod < shape.Lods.Count; lod++)
             {
-                Assert.AreEqual(shape.Lods[lod].Distance, 
+                Assert.AreEqual(shape.Lods[lod].Distance,
                     deserializedShape.Lods[lod].Distance);
-                Assert.AreEqual(shape.Lods[lod].Parts.Count, 
+                Assert.AreEqual(shape.Lods[lod].Parts.Count,
                     deserializedShape.Lods[lod].Parts.Count);
 
                 for (var part = 0; part < shape.Lods[lod].Parts.Count; part++)
                 {
-                    Assert.AreEqual(shape.Lods[lod].Parts[part].PartName, 
+                    Assert.AreEqual(shape.Lods[lod].Parts[part].PartName,
                         deserializedShape.Lods[lod].Parts[part].PartName);
-                    Assert.AreEqual(shape.Lods[lod].Parts[part].Smoothed, 
+                    Assert.AreEqual(shape.Lods[lod].Parts[part].Smoothed,
                         deserializedShape.Lods[lod].Parts[part].Smoothed);
-                    Assert.AreEqual(shape.Lods[lod].Parts[part].ReplicationParams.ReplicationMethod, 
+                    Assert.AreEqual(shape.Lods[lod].Parts[part].ReplicationParams.ReplicationMethod,
                         deserializedShape.Lods[lod].Parts[part].ReplicationParams.ReplicationMethod);
                     Assert.AreEqual(shape.Lods[lod].Parts[part].ReplicationParams.LeaveAtLeastOnePart,
                         deserializedShape.Lods[lod].Parts[part].ReplicationParams.LeaveAtLeastOnePart);
-                    Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons.Count, 
+                    Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons.Count,
                         deserializedShape.Lods[lod].Parts[part].Polygons.Count);
 
                     for (var poly = 0; poly < shape.Lods[lod].Parts[part].Polygons.Count; poly++)
@@ -93,7 +91,7 @@ namespace ShapeData
                             deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices.Count);
 
                         for (var vertice = 0; vertice < shape.Lods[lod].Parts[part].Polygons[poly].Vertices.Count; vertice++)
-                        {                            
+                        {
                             Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].Position.X,
                                 deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].Position.X, 0.00001);
                             Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].Position.Y,
@@ -112,13 +110,13 @@ namespace ShapeData
 
         // for Okrasa Ghia's tsection.dat build 00038
         // without 32 shapes having duplicated file names
-        [TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")] 
-        [TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")] 
+        [TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")]
+        [TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")]
         public async Task LoadTsectionDat(string tsectionPath, bool skipRoadShapes, int trackSectionCount, int trackShapeCount)
         {
             var td = await KujuTsectionParser.LoadTsection(tsectionPath, skipRoadShapes);
 
-            Assert.AreEqual(trackSectionCount, td.TrackSections.Count); 
+            Assert.AreEqual(trackSectionCount, td.TrackSections.Count);
             Assert.AreEqual(trackShapeCount, td.TrackShapes.Count);
         }
 
@@ -128,7 +126,7 @@ namespace ShapeData
         [TestCase(0, 0, 45, 14.14213562373095, 0, 0, -10, 10, 45, TestName = "traj: diagonal -14,142m")]
         [TestCase(0, 0, 0, 0, 10, 90, -10, 10, 90, TestName = "traj: turn left r10 90d")]
         [TestCase(0, 0, 0, 0, 10, -90, 10, 10, 270, TestName = "traj: turn right r10 90d")]
-        [TestCase(0, 0, 0, 0, 14.14213562373095, 45, -4.14213562373, 10, 45, TestName = "traj: turn left r14,142 45d")]        
+        [TestCase(0, 0, 0, 0, 14.14213562373095, 45, -4.14213562373, 10, 45, TestName = "traj: turn left r14,142 45d")]
         [TestCase(0, 0, 0, 10, 10, 90, -10, 20, 90, TestName = "traj: forward 10m, then turn left r10 90d")]
         [TestCase(0, 0, 90, 10, 10, -90, -20, 10, 0, TestName = "traj: left 10m, then turn right r10 90d")]
         [TestCase(0, 0, -90, 5, 14.14213562373095, -45, 15, -4.14213562373, 225, TestName = "traj: turn right r14,142 45d")]
@@ -210,15 +208,15 @@ namespace ShapeData
         [TestCase("A4t10mStrt.s", "AtFixedPos", 0f, 0f, false, 4)] // multi track section
         [TestCase("SR_1tStr_c_005_6m.s", "AtFixedPos", 0f, 0f, false, 1)] // join straight sections
         [TestCase("SR_2tCrv_c_00150r20d.s", "AtFixedPos", 0f, 0f, false, 2)] // join curved sections
-        
+
         // cases for replication at the end
-        [TestCase("A1t10mStrt.s", "AtTheEnd", 0f, 0f, false, 1)] 
+        [TestCase("A1t10mStrt.s", "AtTheEnd", 0f, 0f, false, 1)]
         [TestCase("A4t10mStrt.s", "AtTheEnd", 0f, 0f, true, 4)]
-        [TestCase("A1t500r10d.s", "AtTheEnd", 0f, 0f, true, 1)] 
+        [TestCase("A1t500r10d.s", "AtTheEnd", 0f, 0f, true, 1)]
         [TestCase("A2t500r10d.s", "AtTheEnd", 0f, 0f, false, 2)]
 
         // cases for replication by fixed intervals
-        [TestCase("A1t10mStrt.s", "ByFixedIntervals", 1.05f, 0f, false, 9)] 
+        [TestCase("A1t10mStrt.s", "ByFixedIntervals", 1.05f, 0f, false, 9)]
         [TestCase("A4t10mStrt.s", "ByFixedIntervals", 1.05f, 0f, false, 36)]
         [TestCase("A1t500r10d.s", "ByFixedIntervals", 1.0f, 0f, false, 87)]
 
@@ -244,7 +242,7 @@ namespace ShapeData
         [TestCase("A1t0_8mStrt.s", "StretchedByArc", 1.05f, 1.05f, true, 1)]
 
         // cases for different original length values
-        [TestCase("A1t10mStrt.s", "StretchedByArc", 2.05f, 1.05f, false, 9)] 
+        [TestCase("A1t10mStrt.s", "StretchedByArc", 2.05f, 1.05f, false, 9)]
         [TestCase("A1t10mStrt.s", "StretchedByArc", 0.05f, 1.05f, false, 9)]
         [TestCase("A1t10mStrt.s", "StretchedByArc", 0f, 1.05f, false, 9)]
 
@@ -263,7 +261,7 @@ namespace ShapeData
             var part = shape.Lods[0].AddPart(
                 new EditorPart("Plane", MakeReplicationParams(repType, repParam1, repParam2, leaveAtLeastOne), false));
 
-            part.AddPolygon(new EditorPolygon(0, 
+            part.AddPolygon(new EditorPolygon(0,
                 new List<EditorVertex> {
                     new EditorVertex(-1.2f, 0, 0, 0, 0),
                     new EditorVertex(1.2f, 0, 0, 1, 0),

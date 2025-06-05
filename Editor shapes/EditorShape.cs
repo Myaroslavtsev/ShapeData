@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -26,7 +22,7 @@ namespace ShapeData
 
         public EditorLod AddLod(EditorLod lod)
         {
-            if (lod == null) 
+            if (lod == null)
                 return null;
 
             var sameDistanceLod = lods.Find(l => l.Distance == lod.Distance);
@@ -36,7 +32,7 @@ namespace ShapeData
                 lods.Add(lod);
                 return lod;
             }
-            else            
+            else
                 return sameDistanceLod;
         }
 

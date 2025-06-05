@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShapeData
 {
@@ -16,10 +14,10 @@ namespace ShapeData
             int lineNumber = SkipLinesWithIncorrectIndents(cells, 0, 0);
 
             var shape = new EditorShape(cells[lineNumber].line[1]);
-            
+
             if (cells[lineNumber].line.Count > 2)
                 shape.ShapeComment = cells[lineNumber].line[2];
-            
+
             AddEditorObjects(cells, ++lineNumber, shape, null, null, null);
 
             return shape;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -14,10 +10,10 @@ namespace ShapeData
 
         private List<KujuTrackPath> paths { get; }
 
-        public KujuTrackShape(string fileName = "test.s" )
+        public KujuTrackShape(string fileName = "test.s")
         {
             FileName = fileName;
-            
+
             paths = new List<KujuTrackPath>();
         }
 

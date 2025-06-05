@@ -1,9 +1,6 @@
-﻿using System;
+﻿using ShapeData.Geometry;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ShapeData.Geometry;
 
 namespace ShapeData.Editor_shapes
 {
@@ -13,9 +10,9 @@ namespace ShapeData.Editor_shapes
 
         public static EditorPart TransposePart(EditorPart part, Direction direction)
         {
-            foreach(var poly in part.Polygons)
+            foreach (var poly in part.Polygons)
             {
-                foreach(var v in poly.Vertices)
+                foreach (var v in poly.Vertices)
                     Geometry.Geometry.TransposePoint(v.Position, direction);
             }
 
@@ -43,7 +40,7 @@ namespace ShapeData.Editor_shapes
         }
 
         public static List<Direction> SplitSectionByFixedIntervals(EditorTrackSection section, IPartReplication replicationData) =>
-            SplitSectionByIntervals(section, replicationData, false, "Interval");    
+            SplitSectionByIntervals(section, replicationData, false, "Interval");
 
         public static List<Direction> SplitSectionByEvenIntervals(EditorTrackSection section, IPartReplication replicationData) =>
             SplitSectionByIntervals(section, replicationData, true, "MinInterval");
@@ -52,10 +49,10 @@ namespace ShapeData.Editor_shapes
             SplitSectionByIntervals(section, replicationData, true, "MinLength");
 
         public static List<Direction> SplitSectionByEvenDeflection(
-            EditorTrackSection section, 
+            EditorTrackSection section,
             IPartReplication replicationData)
         {
-            double interval = section.SectionTrajectory.Radius * 
+            double interval = section.SectionTrajectory.Radius *
                 AngleIntervalByDeflection(section, replicationData) * Math.PI / 180;
 
             if (section.SectionTrajectory.Radius == 0)
@@ -65,8 +62,8 @@ namespace ShapeData.Editor_shapes
         }
 
         private static List<Direction> SplitSectionByIntervals(
-            EditorTrackSection section, 
-            IPartReplication replicationData, 
+            EditorTrackSection section,
+            IPartReplication replicationData,
             bool arrangeEvenly,
             string replicationParamName)
         {
@@ -78,7 +75,7 @@ namespace ShapeData.Editor_shapes
             double interval = replicationParams[replicationParamName];
 
             if (section.SectionTrajectory.Radius == 0)
-                return SplitStraightSection(section, interval, arrangeEvenly, replicationData.LeaveAtLeastOnePart);               
+                return SplitStraightSection(section, interval, arrangeEvenly, replicationData.LeaveAtLeastOnePart);
             else
                 return SplitCurvedSection(section, interval, arrangeEvenly, replicationData.LeaveAtLeastOnePart);
         }
@@ -94,11 +91,11 @@ namespace ShapeData.Editor_shapes
 
             if (section.SectionTrajectory.Radius == 0)
                 return new Trajectory(
-                    StraightInterval(interval, section.SectionTrajectory.Straight, true), 
+                    StraightInterval(interval, section.SectionTrajectory.Straight, true),
                     0, 0);
             else
-                return new Trajectory(0, 
-                    section.SectionTrajectory.Radius, 
+                return new Trajectory(0,
+                    section.SectionTrajectory.Radius,
                     AngleInterval(interval, section.SectionTrajectory.Radius, section.SectionTrajectory.Angle, true));
         }
 
@@ -108,7 +105,7 @@ namespace ShapeData.Editor_shapes
                 return section.SectionTrajectory;
 
             double angleInterval = AngleIntervalByDeflection(section, replicationData);
-                
+
             return new Trajectory(0, section.SectionTrajectory.Radius, angleInterval);
         }
 
@@ -130,8 +127,8 @@ namespace ShapeData.Editor_shapes
         }
 
         private static List<Direction> SplitStraightSection(
-            EditorTrackSection section, 
-            double interval, 
+            EditorTrackSection section,
+            double interval,
             bool arrangeEvenly,
             bool leaveAtLeastOneDirection)
         {
@@ -148,7 +145,7 @@ namespace ShapeData.Editor_shapes
                  partialTrajectory.Straight += interval)
                 directions.Add(Geometry.Geometry.FindEndDirection(partialTrajectory, section.StartDirection));
 
-            if (directions.Count == 0 && leaveAtLeastOneDirection )
+            if (directions.Count == 0 && leaveAtLeastOneDirection)
                 return new List<Direction> { section.StartDirection };
 
             return directions;
@@ -156,15 +153,15 @@ namespace ShapeData.Editor_shapes
 
         private static double StraightInterval(double interval, double straight, bool arrangeEvenly)
         {
-            if (arrangeEvenly)   
+            if (arrangeEvenly)
                 return straight / Math.Floor(straight / interval);
 
             return interval;
         }
 
         private static List<Direction> SplitCurvedSection(
-            EditorTrackSection section, 
-            double interval, 
+            EditorTrackSection section,
+            double interval,
             bool arrangeEvenly,
             bool leaveAtLeastOneDirection)
         {
@@ -175,7 +172,7 @@ namespace ShapeData.Editor_shapes
             var partialTrajectory = new Trajectory
             {
                 Radius = section.SectionTrajectory.Radius
-            };            
+            };
 
             double angleInterval = AngleInterval(interval, section.SectionTrajectory.Radius, section.SectionTrajectory.Angle, arrangeEvenly);
 
@@ -204,8 +201,8 @@ namespace ShapeData.Editor_shapes
         {
             var parameters = new Dictionary<string, float>();
 
-            foreach (var (Name, Value) in ReplicationData.GetParams())            
-                parameters.Add(Name, Value);            
+            foreach (var (Name, Value) in ReplicationData.GetParams())
+                parameters.Add(Name, Value);
 
             return parameters;
         }

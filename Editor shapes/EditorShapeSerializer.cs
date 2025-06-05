@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ShapeData
 {
@@ -75,7 +72,7 @@ namespace ShapeData
 
         private static void AddVertexDataToSb(EditorVertex vertex, StringBuilder sb)
         {
-            sb.AppendLine(";;;;V;" + 
+            sb.AppendLine(";;;;V;" +
                 vertex.Position.X.ToString("0.0000") + ";" +
                 vertex.Position.Y.ToString("0.0000") + ";" +
                 vertex.Position.Z.ToString("0.0000") + ";" +

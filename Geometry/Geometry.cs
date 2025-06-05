@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Numerics;
 
 namespace ShapeData.Geometry
@@ -82,8 +79,8 @@ namespace ShapeData.Geometry
             }
         }
 
-        public static List<(double U, double V)> MakeSomeUVcoords(List<Point> points) =>        
-            ScaleToUnitSquare(ProjectPointsToPlane(points, MakePlaneFromFirstPoints(points)));        
+        public static List<(double U, double V)> MakeSomeUVcoords(List<Point> points) =>
+            ScaleToUnitSquare(ProjectPointsToPlane(points, MakePlaneFromFirstPoints(points)));
 
         private static PlaneVectors MakePlaneFromFirstPoints(List<Point> points)
         {
@@ -149,12 +146,12 @@ namespace ShapeData.Geometry
             if (maxBound < 1e-3)
                 maxBound = 1;
 
-            var result = new List<(double U, double V)> ();
+            var result = new List<(double U, double V)>();
 
             foreach (var (U, V) in dots)
                 result.Add(((U - minU) / maxBound, (V - minV) / maxBound));
 
-            return result;            
+            return result;
         }
 
         private static Vector3 ToVector(Point p) => new((float)p.X, (float)p.Y, (float)p.Z);

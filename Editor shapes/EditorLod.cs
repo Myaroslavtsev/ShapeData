@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -27,7 +23,7 @@ namespace ShapeData
         {
             if (part == null)
                 return null;
-            
+
             if (parts.Find(p => p.PartName == part.PartName) == null)
             {
                 parts.Add(part);

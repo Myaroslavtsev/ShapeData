@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -18,7 +14,7 @@ namespace ShapeData
 
     public interface IPartReplication
     {
-        PartReplicationMethod ReplicationMethod {get; }
+        PartReplicationMethod ReplicationMethod { get; }
 
         int GetParamCount();
         IEnumerable<(string Name, float Value)> GetParams();
@@ -117,7 +113,7 @@ namespace ShapeData
 
     public class ReplicationAtFixedPos : IPartReplication
     {
-        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.AtFixedPos; }        
+        public PartReplicationMethod ReplicationMethod { get => PartReplicationMethod.AtFixedPos; }
 
         public readonly IDistancingParams _distancingParams;
 
