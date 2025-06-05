@@ -16,6 +16,13 @@ namespace ShapeData
 
         public List<EditorPolygon> Polygons => polygons;
 
+        public IEnumerable<EditorVertex> Vertices()
+        {
+            foreach (var polygon in polygons)
+                foreach (var vertex in polygon.Vertices)
+                    yield return vertex;
+        }
+
         // Methods
         public EditorPart(
             string name,

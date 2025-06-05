@@ -1,5 +1,6 @@
 ﻿using ShapeData.Geometry;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace ShapeData.Editor_shapes
@@ -10,11 +11,8 @@ namespace ShapeData.Editor_shapes
 
         public static EditorPart TransposePart(EditorPart part, Direction direction)
         {
-            foreach (var poly in part.Polygons)
-            {
-                foreach (var v in poly.Vertices)
-                    v.Position = Geometry.Geometry.TransposePoint(v.Position, direction);
-            }
+            foreach (var v in part.Vertices()) 
+                v.Position = Geometry.Geometry.TransposePoint(v.Position, direction);
 
             return part;
         }
@@ -30,11 +28,8 @@ namespace ShapeData.Editor_shapes
 
             double scaleFactor = originalLength / trajectory.Length;
 
-            foreach (var poly in part.Polygons)
-            {
-                foreach (var v in poly.Vertices)
-                    v.Position = Geometry.Geometry.BendPoint(v.Position, trajectory, scaleFactor);
-            }
+            foreach(var v in part.Vertices())
+                v.Position = Geometry.Geometry.BendPoint(v.Position, trajectory, scaleFactor);
 
             return part;
         }

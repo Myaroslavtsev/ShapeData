@@ -34,9 +34,9 @@ namespace ShapeData.Kuju_shape
             sb.Append(AddShapeStart());
             sb.Append(AddShapeHeader());
             sb.Append(AddShapeVolumes(bb));
-            /*sb.Append(AddShapeShaderNames());
+            sb.Append(AddShapeShaderNames(shape));
             sb.Append(AddShapeTextureFilterNames());
-            sb.Append(AddShapePoints());
+            /*sb.Append(AddShapePoints());
             sb.Append(AddShapeUvPoints());
             sb.Append(AddShapeNormals());
             sb.Append(AddShapeSortVectorsAndColors());
@@ -100,6 +100,35 @@ namespace ShapeData.Kuju_shape
             minZ -= boundingBoxMargin;
 
             return (new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
+        }
+
+        private static string AddShapeTextureFilterNames()
+        {
+            return Tabs(1) + "texture_filter_names( 1" + newLine +
+                Tabs(2) + "named_filter_mode( MipLinear )" + newLine +
+                Tabs(1) + ")" + newLine;
+        }
+
+        private static string AddShapeShaderNames(EditorShape shape)
+        {
+            var shaderNames = new List<string>();
+
+            foreach (var lod in shape.Lods)
+                foreach (var part in lod.Parts)
+                    foreach (var poly in part.Polygons)
+                    {
+                        if (poly.MaterialType == Material.SolidNorm || poly.MaterialType == Material.SolidBright)
+                            shaderNames.Add("TextDiff");
+                        if (poly.MaterialType == Material.TransNorm || poly.MaterialType == Material.TransBright)
+                            shaderNames.Add("BlendATexDiff");
+                    }
+
+            var s = Tabs(1) + "shader_names( " + shaderNames.Count + newLine;
+
+            foreach (var shader in shaderNames)
+                s += Tabs(2) + "named_shader ( " + shader + " )" + newLine;
+
+            return s + Tabs(1) + ")" + newLine;
         }
 
         private static string AddShapeVolumes((Vector3 minPoint, Vector3 maxPoint) bb)

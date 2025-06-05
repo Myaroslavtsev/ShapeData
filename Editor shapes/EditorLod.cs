@@ -4,15 +4,27 @@ namespace ShapeData
 {
     public class EditorLod
     {
-        // General properties
+
         public int Distance;
 
-        // Parts
         private readonly List<EditorPart> parts;
 
         public List<EditorPart> Parts => parts;
 
-        // Methods
+        public IEnumerable<EditorPolygon> Polygons()
+        {
+            foreach (var part in parts)
+                foreach (var poly in part.Polygons)
+                    yield return poly;
+        }
+
+        public IEnumerable<EditorVertex> Vertices()
+        {
+            foreach (var part in parts)
+                foreach (var vertex in part.Vertices())
+                    yield return vertex;
+        }
+        
         public EditorLod(int distance)
         {
             Distance = distance;

@@ -13,6 +13,27 @@ namespace ShapeData
 
         public List<EditorLod> Lods => lods;
 
+        public IEnumerable<EditorPart> Parts()
+        {
+            foreach (var lod in Lods)
+                foreach (var part in lod.Parts)
+                    yield return part;
+        }
+
+        public IEnumerable<EditorPolygon> Polygons()
+        {
+            foreach (var lod in Lods) 
+                foreach (var polygon in lod.Polygons())
+                    yield return polygon;
+        }
+
+        public IEnumerable<EditorVertex> Vertices()
+        {
+            foreach (var lod in Lods)
+                foreach (var vertex in lod.Vertices())
+                    yield return vertex;
+        }
+
         // Methods
         public EditorShape(string shapeName)
         {
