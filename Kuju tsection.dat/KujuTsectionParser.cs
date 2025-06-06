@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ShapeData.Kuju_tsection.dat
 {
-    class DataBlock
+    class TsectionDataBlock
     {
         public string Caption;
 
@@ -12,7 +12,7 @@ namespace ShapeData.Kuju_tsection.dat
 
         public int BlockEnd;
 
-        public DataBlock(string caption, string data, int bEnd)
+        public TsectionDataBlock(string caption, string data, int bEnd)
         {
             Caption = caption;
             Data = data;
@@ -235,20 +235,20 @@ namespace ShapeData.Kuju_tsection.dat
             }
         }
 
-        private static DataBlock GetDataBlock(string file, int startPos)
+        private static TsectionDataBlock GetDataBlock(string file, int startPos)
         {
             var (blockName, bracketPos) = FindDataBloskStart(file, startPos);
             if (bracketPos < 0)
-                return new DataBlock("", "", -1);
+                return new TsectionDataBlock("", "", -1);
 
             var endPos = FindDataBlockEnd(file, bracketPos);
 
             if (endPos > bracketPos)
-                return new DataBlock(blockName.Trim(),
+                return new TsectionDataBlock(blockName.Trim(),
                     file[(bracketPos + 1)..(endPos - 1)].Trim(),
                     endPos);
 
-            return new DataBlock("", "", -1);
+            return new TsectionDataBlock("", "", -1);
         }
 
         private static (string blockName, int bracketPos) FindDataBloskStart(string file, int startPos)

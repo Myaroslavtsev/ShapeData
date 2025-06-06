@@ -76,8 +76,8 @@ namespace ShapeData
                 vertex.Position.X.ToString("0.0000") + ";" +
                 vertex.Position.Y.ToString("0.0000") + ";" +
                 vertex.Position.Z.ToString("0.0000") + ";" +
-                vertex.U.ToString("0.00000") + ";" +
-                vertex.V.ToString("0.00000"));
+                vertex.UvPosition.X.ToString("0.00000") + ";" +
+                vertex.UvPosition.Y.ToString("0.00000"));
         }
     }
 }

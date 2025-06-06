@@ -2,10 +2,12 @@
 using ShapeData.Editor_shapes;
 using ShapeData.Geometry;
 using ShapeData.Kuju_tsection.dat;
+using ShapeData.Kuju_shape;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
 //using NUnit.Framework.Legacy; // for NUnit 4.0 and newer
 
 namespace ShapeData
@@ -98,10 +100,10 @@ namespace ShapeData
                                 deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].Position.Y, 0.00001);
                             Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].Position.Z,
                                 deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].Position.Z, 0.00001);
-                            Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].U,
-                                deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].U, 0.00001);
-                            Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].V,
-                                deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].V, 0.00001);
+                            Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].UvPosition.X,
+                                deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].UvPosition.X, 0.00001);
+                            Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].UvPosition.Y,
+                                deserializedShape.Lods[lod].Parts[part].Polygons[poly].Vertices[vertice].UvPosition.Y, 0.00001);
                         }
                     }
                 }
@@ -321,6 +323,46 @@ namespace ShapeData
             var lastPartPoly = replica.Lods[0].Parts.Last().Polygons[0];
             Assert.AreEqual(X, lastPartPoly.Vertices[2].Position.X, 1e-5f);
             Assert.AreEqual(Z, lastPartPoly.Vertices[2].Position.Z, 1e-5f);
+        }
+
+        [Test]
+        public void DataBlockSimplePrintingTest()
+        {
+            var db = new DataBlock(
+                "Blockname", 
+                new List<string> { "1", "2" }, 
+                null, 
+                new List<string> { "3", "4" } );
+
+            var sb = new StringBuilder();
+
+            db.PrintBlock(sb);
+
+            var s = sb.ToString();
+
+            Assert.AreEqual("Blockname ( 1 2 ) 3 4", s.Substring(0, 21));
+        }
+
+        [Test]
+        public void DataBlockComplexPrintingTest()
+        {
+            var db = new DataBlock(
+                "Blockname",
+                new List<string> { "1", "2" },
+                new List<DataBlock> {
+                    new DataBlock( "Subblock", new List<string>{ "7", "8" } )
+                },
+                new List<string> { "3", "4" }) ;
+
+            var sb = new StringBuilder();
+
+            db.PrintBlock(sb);
+
+            var s = sb.ToString().Split("\r\n");
+
+            Assert.AreEqual("Blockname ( 1 2", s[0].Substring(0, 15));
+            Assert.AreEqual("Subblock ( 7 8 )", s[1].Substring(1, 16));
+            Assert.AreEqual(") 3 4", s[2].Substring(0, 5));
         }
 
         private static IPartReplication MakeReplicationParams(string repType, float repParam1, float repParam2, bool leaveAtLeastOne)

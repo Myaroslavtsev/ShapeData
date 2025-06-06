@@ -79,7 +79,7 @@ namespace ShapeData.Geometry
         public static List<(double U, double V)> MakeSomeUVcoords(List<Vector3> points) =>
             ScaleToUnitSquare(ProjectPointsToPlane(points, MakePlaneFromFirstPoints(points)));
 
-        private static PlaneVectors MakePlaneFromFirstPoints(List<Vector3> points)
+        public static PlaneVectors MakePlaneFromFirstPoints(List<Vector3> points)
         {
             if (points == null || points.Count < 3)
                 throw new ArgumentException("At least 3 points required to set a plane.");

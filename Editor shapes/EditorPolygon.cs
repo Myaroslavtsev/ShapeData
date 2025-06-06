@@ -19,6 +19,9 @@ namespace ShapeData
 
         public string TextureFilename;
 
+        // Kuju shape array indexes
+        public int KujuNormalId;
+
         private readonly List<EditorVertex> vertices;
 
         public List<EditorVertex> Vertices => vertices;
@@ -49,7 +52,8 @@ namespace ShapeData
             var verticesCopy = new List<EditorVertex>();
 
             foreach (var v in vertices)
-                verticesCopy.Add(new EditorVertex((float)v.Position.X, (float)v.Position.Y, (float)v.Position.Z, v.U, v.V));
+                verticesCopy.Add(
+                    new EditorVertex(v.Position.X, v.Position.Y, v.Position.Z, v.UvPosition.X, v.UvPosition.Y));
 
             return new EditorPolygon(PolygonId, verticesCopy, MaterialType, TextureFilename);
         }
