@@ -21,6 +21,8 @@ namespace ShapeData
 
         // Kuju shape array indexes
         public int KujuNormalId;
+        public int KujuImageId;
+        public int KujuShaderId;
 
         private readonly List<EditorVertex> vertices;
 
@@ -30,7 +32,7 @@ namespace ShapeData
             uint polygonId,
             List<EditorVertex> vertexList,
             Material material = Material.SolidNorm,
-            string textureName = "blank.ace")
+            string textureName = "blank")
         {
             PolygonId = polygonId;
             MaterialType = material;
