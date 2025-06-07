@@ -18,7 +18,7 @@ namespace ShapeData
 
         private static void AddShapeDataToSb(EditorShape shape, StringBuilder sb)
         {
-            sb.AppendLine("Shape" + ";" + shape.ShapeName.Replace(';', ':') + ";" + shape.ShapeComment.Replace(';', ':'));
+            sb.AppendLine("Shape" + ';' + shape.ShapeName.Replace(';', ':') + ';' + shape.ShapeComment.Replace(';', ':'));
 
             foreach (var lod in shape.Lods.OrderBy(l => l.Distance))
             {
@@ -28,7 +28,7 @@ namespace ShapeData
 
         private static void AddLodDataToSb(EditorLod lod, StringBuilder sb)
         {
-            sb.AppendLine(";" + "Lod" + ";" + lod.Distance);
+            sb.AppendLine(';' + "Lod" + ';' + lod.Distance);
 
             foreach (var part in lod.Parts)
             {
@@ -38,15 +38,15 @@ namespace ShapeData
 
         private static void AddPartDataToSb(EditorPart part, StringBuilder sb)
         {
-            var dataString = ";;" + "Part" + ";" +
-                part.PartName + ";" +
-                part.IsSmoothed() + ";" +
-                part.LeaveAtLeastOne() + ";" +
+            var dataString = ";;" + "Part" + ';' +
+                part.PartName + ';' +
+                part.IsSmoothed() + ';' +
+                part.LeaveAtLeastOne() + ';' +
                 part.ReplicationParams.ReplicationMethod;
 
             foreach (var (Name, Value) in part.ReplicationParams.GetParams())
             {
-                dataString += ";" + Name + ";" + Value.ToString("0.0000");
+                dataString += ';' + Name + ';' + Value.ToString("0.0000");
             }
 
             sb.AppendLine(dataString);
@@ -59,10 +59,10 @@ namespace ShapeData
 
         private static void AddPolygonDataToSb(EditorPolygon polygon, StringBuilder sb)
         {
-            sb.AppendLine(";;;" + "Polygon" + ";" +
-                polygon.PolygonId + ";" +
-                polygon.MaterialType + ";" +
-                polygon.TextureFilename);
+            sb.AppendLine(";;;" + "Polygon" + ';' +
+                polygon.MaterialType + ';' +
+                polygon.TextureFilename + ';' +
+                polygon.IsTrackbed());
 
             foreach (var vertex in polygon.Vertices)
             {
@@ -73,10 +73,10 @@ namespace ShapeData
         private static void AddVertexDataToSb(EditorVertex vertex, StringBuilder sb)
         {
             sb.AppendLine(";;;;V;" +
-                vertex.Position.X.ToString("0.0000") + ";" +
-                vertex.Position.Y.ToString("0.0000") + ";" +
-                vertex.Position.Z.ToString("0.0000") + ";" +
-                vertex.UvPosition.X.ToString("0.00000") + ";" +
+                vertex.Position.X.ToString("0.0000") + ';' +
+                vertex.Position.Y.ToString("0.0000") + ';' +
+                vertex.Position.Z.ToString("0.0000") + ';' +
+                vertex.UvPosition.X.ToString("0.00000") + ';' +
                 vertex.UvPosition.Y.ToString("0.00000"));
         }
     }

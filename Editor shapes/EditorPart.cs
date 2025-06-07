@@ -40,13 +40,8 @@ namespace ShapeData
             if (polygon == null)
                 return null;
 
-            if (polygons.Find(p => p.PolygonId == polygon.PolygonId) == null)
-            {
-                polygons.Add(polygon);
+            polygons.Add(polygon);
                 return polygon;
-            }
-            else
-                return null;
         }
 
         public EditorPart Copy(bool setFixedPosReplication)
@@ -62,9 +57,6 @@ namespace ShapeData
 
             return copy;
         }
-
-        public bool DeletePolygon(uint polygonId) =>
-            GeneralMethods.RemoveListItems(polygons, poly => poly.PolygonId == polygonId);
 
         public string IsSmoothed() => Smoothed ? "Smoothed" : "Unsmoothed";
         public string LeaveAtLeastOne() => ReplicationParams.LeaveAtLeastOnePart ? "Leave" : "NotLeave";

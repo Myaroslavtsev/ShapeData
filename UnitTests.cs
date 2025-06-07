@@ -35,13 +35,13 @@ namespace ShapeData
                 "TestPart",
                 new ReplicationAtFixedPos(),
                 true));
-            newLod.Parts[0].AddPolygon(new EditorPolygon(0,
+            newLod.Parts[0].AddPolygon(new EditorPolygon(
                 new List<EditorVertex> {
                     new EditorVertex(0.1001f, 0.2f, 0.3f, 0.4f, 0.5f),
                     new EditorVertex(1.1f, 1.2f, 1.3f, 1.4f, 1.5f),
                     new EditorVertex(2.1f, 2.2f, 2.3f, 2.4f, 2.5f)
                 }));
-            newLod.Parts[0].AddPolygon(new EditorPolygon(1,
+            newLod.Parts[0].AddPolygon(new EditorPolygon(
                 new List<EditorVertex> {
                     new EditorVertex(5.1f, 5.2f, 5.3f, 5.4f, 5.5f)
                 }));
@@ -83,8 +83,6 @@ namespace ShapeData
 
                     for (var poly = 0; poly < shape.Lods[lod].Parts[part].Polygons.Count; poly++)
                     {
-                        Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].PolygonId,
-                            deserializedShape.Lods[lod].Parts[part].Polygons[poly].PolygonId);
                         Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].MaterialType,
                             deserializedShape.Lods[lod].Parts[part].Polygons[poly].MaterialType);
                         Assert.AreEqual(shape.Lods[lod].Parts[part].Polygons[poly].TextureFilename,
@@ -158,7 +156,7 @@ namespace ShapeData
         [Test]
         public void PlaneProjectionTestSimple()
         {
-            var Polygon = new EditorPolygon(0,
+            var Polygon = new EditorPolygon(
                 new List<EditorVertex> {
                     new EditorVertex(0, 0, 0, 0, 0),
                     new EditorVertex(0.2f, 0.2f, 0, 0, 0),
@@ -177,7 +175,7 @@ namespace ShapeData
         [Test]
         public void PlaneProjectionTestDiagonal()
         {
-            var Polygon = new EditorPolygon(0,
+            var Polygon = new EditorPolygon(
                 new List<EditorVertex> {
                     new EditorVertex(10, 0, 0, 0, 0),
                     new EditorVertex(0, 10, 0, 0, 0),
@@ -263,7 +261,7 @@ namespace ShapeData
             var part = shape.Lods[0].AddPart(
                 new EditorPart("Plane", MakeReplicationParams(repType, repParam1, repParam2, leaveAtLeastOne), false));
 
-            part.AddPolygon(new EditorPolygon(0,
+            part.AddPolygon(new EditorPolygon(
                 new List<EditorVertex> {
                     new EditorVertex(-1.2f, 0, 0, 0, 0),
                     new EditorVertex(1.2f, 0, 0, 1, 0),
@@ -311,7 +309,7 @@ namespace ShapeData
             var part = shape.Lods[0].AddPart(
                 new EditorPart("Plane", MakeReplicationParams(repType, repParam1, repParam2, leaveAtLeastOne), false));
 
-            part.AddPolygon(new EditorPolygon(0,
+            part.AddPolygon(new EditorPolygon(
                 new List<EditorVertex> {
                     new EditorVertex(-1.2f, 0, 0, 0, 0),
                     new EditorVertex(1.2f, 0, 0, 1, 0),
@@ -372,19 +370,19 @@ namespace ShapeData
 
             var part = editorShape.Lods[0].AddPart(new EditorPart("Angle", new ReplicationAtFixedPos(), true));
 
-            part.AddPolygon(new EditorPolygon(0, new List<EditorVertex> {
+            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
                 new EditorVertex(0.6f, 0.6f, -0.6f, 1, 0),                
                 new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
                 new EditorVertex(0.6f, -0.6f, 0.6f, 0, 0)
             }));
 
-            part.AddPolygon(new EditorPolygon(1, new List<EditorVertex> {
+            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
                 new EditorVertex(0.6f, -0.6f, 0.6f, 0, 0),
                 new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
                 new EditorVertex(-0.6f, 0.6f, 0.6f, 1, 0)
             }));
 
-            part.AddPolygon(new EditorPolygon(2, new List<EditorVertex> {
+            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
                 new EditorVertex(-0.6f, 0.6f, 0.6f, 1, 0),
                 new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
                 new EditorVertex(0.6f, 0.6f, -0.6f, 0, 0)

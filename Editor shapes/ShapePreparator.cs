@@ -14,14 +14,16 @@ namespace ShapeData.Editor_shapes
         public int TextureId;
         public int IsBright;
         public int IsTransparent;
+        public int DrawOrder;
 
-        public PrimState(string name, int shaderId, int textureId, bool isBright, bool isTransparent)
+        public PrimState(string name, int shaderId, int textureId, bool isBright, bool isTransparent, bool isTrackbed)
         {
             Name = name;
             ShaderId = shaderId;
             TextureId = textureId;
             IsBright = isBright ? 1 : 0;
             IsTransparent = isTransparent ? 1 : 0;
+            DrawOrder = isTrackbed ? 3 : 1;
         }
     }
 
@@ -97,7 +99,8 @@ namespace ShapeData.Editor_shapes
                 poly.KujuShaderId,
                 poly.KujuImageId,
                 poly.MaterialType == Material.SolidBright || poly.MaterialType == Material.TransBright,
-                poly.MaterialType == Material.TransNorm || poly.MaterialType == Material.TransBright);        
+                poly.MaterialType == Material.TransNorm || poly.MaterialType == Material.TransBright,
+                poly.Trackbed);        
 
         private static string GetShaderName(EditorPolygon poly)
         {
@@ -171,20 +174,13 @@ namespace ShapeData.Editor_shapes
 
         private static void MakePolyAndPointNormals(EditorShape shape)
         {            
-
             foreach (var poly in shape.Polygons())
             {
-                var basePoints = new List<Vector3> {
-                    poly.Vertices[0].Position, poly.Vertices[1].Position, poly.Vertices[2].Position };
-                var normal = Geometry.Geometry.MakePlaneFromFirstPoints(basePoints).Normal;
-
-                poly.Normal = normal;
+                var normal = poly.MakeNormal();
 
                 foreach (var vertex in poly.Vertices)                
                     vertex.Normal = normal;                
-            }
-
-            
+            }            
         }
 
         private static void JoinSmoothedNormalsInShape(EditorShape shape)

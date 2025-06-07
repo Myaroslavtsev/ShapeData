@@ -51,7 +51,7 @@ namespace ShapeData
 
                 case 3:
                     if (part != null)
-                        part.AddPolygon(GetPolygonFromLine(cells[lineNumber++].line, part.Polygons.Count));
+                        part.AddPolygon(GetPolygonFromLine(cells[lineNumber++].line));
                     AddEditorObjects(cells, lineNumber, shape, lod, part, part.Polygons.Last());
                     break;
 
@@ -76,10 +76,13 @@ namespace ShapeData
             return new EditorVertex(x, y, z, u, v);
         }
 
-        private static EditorPolygon GetPolygonFromLine(List<string> line, int id)
+        private static EditorPolygon GetPolygonFromLine(List<string> line)
         {
-            return new EditorPolygon((uint)id, new List<EditorVertex>(), ParseMaterialName(line[2]), line[3]);
+            return new EditorPolygon(new List<EditorVertex>(), ParseMaterialName(line[1]), line[2], IsTrackbedPolygon(line[3]));
         }
+
+        private static bool IsTrackbedPolygon(string data) =>
+            data.ToLower() == "trackbed";
 
         private static Material ParseMaterialName(string materialName)
         {

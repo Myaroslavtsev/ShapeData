@@ -262,7 +262,12 @@ namespace ShapeData.Kuju_shape
                     "prim_state " + ps.Name, new List<string> { "00000000", ps.ShaderId.ToString() },
                     new List<DataBlock> { new DataBlock("tex_idxs", 
                         new List<string> { "1", ps.TextureId.ToString() }, null,
-                        new List<string> { "0", ps.IsBright.ToString(), ps.IsTransparent.ToString(), "0", "1" }) }));
+                        new List<string> { 
+                            "0", 
+                            ps.IsBright.ToString(), 
+                            ps.IsTransparent.ToString(), 
+                            "0", 
+                            ps.DrawOrder.ToString() }) }));
             }
 
             return dataBlock;

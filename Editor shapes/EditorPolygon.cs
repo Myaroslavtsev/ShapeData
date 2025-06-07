@@ -15,9 +15,9 @@ namespace ShapeData
     public class EditorPolygon
     {
         // GeneralProperties
-        public uint PolygonId { get; set; }
-
         public Material MaterialType { get; set; }
+
+        public bool Trackbed { get; set; }
 
         public string TextureFilename { get; set; }
 
@@ -35,15 +35,15 @@ namespace ShapeData
         public List<EditorVertex> Vertices => vertices;
 
         public EditorPolygon(
-            uint polygonId,
             List<EditorVertex> vertexList,
             Material material = Material.SolidNorm,
-            string textureName = "blank")
+            string textureName = "blank",
+            bool isTrackbed = false)
         {
-            PolygonId = polygonId;
             MaterialType = material;
             TextureFilename = textureName;
             vertices = vertexList;
+            Trackbed = isTrackbed;
         }
 
         public EditorVertex AddVertex(EditorVertex vertex)
@@ -63,13 +63,27 @@ namespace ShapeData
                 verticesCopy.Add(
                     new EditorVertex(v.Position.X, v.Position.Y, v.Position.Z, v.UvPosition.X, v.UvPosition.Y));
 
-            //throw new NotImplementedException("Vertex normals copying"); // this data is needed only after copying!
-
-            return new EditorPolygon(PolygonId, verticesCopy, MaterialType, TextureFilename);
+            return new EditorPolygon(verticesCopy, MaterialType, TextureFilename);
         }
 
         // to think about: how to block from deleting last 3 points but allow increasing point number
         // when deserializer requires adding line by line
         // so creation with less than 2 vertices should also be possible
+
+        public string IsTrackbed() =>
+            Trackbed ? "Trackbed" : "Typical";
+
+        public void Flip() => Vertices.Reverse();
+        
+        public Vector3 MakeNormal()
+        {
+            if (Vertices.Count < 3)
+                return new Vector3();
+
+            Normal = Geometry.Geometry.MakePlaneFromFirstPoints(
+                new List<Vector3> { Vertices[0].Position, Vertices[1].Position, Vertices[2].Position }).Normal;
+
+            return Normal;
+        }
     }
 }
