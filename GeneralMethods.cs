@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ShapeData
@@ -25,7 +26,7 @@ namespace ShapeData
 
         public static async Task SaveStringToFile(string fileName, string data)
         {
-            using System.IO.StreamWriter writer = new(fileName, false);
+            using System.IO.StreamWriter writer = new(fileName, false, new UnicodeEncoding(false, true)); // == Encoding.Unicode
             await writer.WriteAsync(data);
         }
     }

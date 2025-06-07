@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace ShapeData
 {
@@ -13,16 +15,20 @@ namespace ShapeData
     public class EditorPolygon
     {
         // GeneralProperties
-        public uint PolygonId;
+        public uint PolygonId { get; set; }
 
-        public Material MaterialType;
+        public Material MaterialType { get; set; }
 
-        public string TextureFilename;
+        public string TextureFilename { get; set; }
 
         // Kuju shape array indexes
-        public int KujuNormalId;
-        public int KujuImageId;
-        public int KujuShaderId;
+        public int KujuImageId { get; set; }
+        public int KujuShaderId { get; set; }
+        public int KujuLightMatId { get; set; }
+        public int KujuPrimStateId { get; set; }
+        public int KujuNormalId { get; set; }
+
+        public Vector3 Normal { get; set; }
 
         private readonly List<EditorVertex> vertices;
 
@@ -56,6 +62,8 @@ namespace ShapeData
             foreach (var v in vertices)
                 verticesCopy.Add(
                     new EditorVertex(v.Position.X, v.Position.Y, v.Position.Z, v.UvPosition.X, v.UvPosition.Y));
+
+            //throw new NotImplementedException("Vertex normals copying"); // this data is needed only after copying!
 
             return new EditorPolygon(PolygonId, verticesCopy, MaterialType, TextureFilename);
         }

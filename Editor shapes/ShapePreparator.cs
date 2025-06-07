@@ -7,6 +7,24 @@ using System.Numerics;
 
 namespace ShapeData.Editor_shapes
 {
+    struct PrimState
+    {
+        public string Name;
+        public int ShaderId;
+        public int TextureId;
+        public int IsBright;
+        public int IsTransparent;
+
+        public PrimState(string name, int shaderId, int textureId, bool isBright, bool isTransparent)
+        {
+            Name = name;
+            ShaderId = shaderId;
+            TextureId = textureId;
+            IsBright = isBright ? 1 : 0;
+            IsTransparent = isTransparent ? 1 : 0;
+        }
+    }
+
     class ShapePreparator
     {
         const float boundingBoxMargin = 0.5f;
@@ -16,65 +34,87 @@ namespace ShapeData.Editor_shapes
         public List<Vector3> Normals { get; private set; }
         public List<string> Shaders { get; private set; }
         public List<string> Images { get; private set; }
-        public (Vector3, Vector3) BoundingBox { get; private set; }
+        public List<int> LightMatIds { get; private set; }
+        public List<PrimState> PrimStates { get; private set; }
+        public (Vector3, Vector3) BoundingBox { get; private set; }  
+        public List<List<(int pointId, int normalId, int uvPointId)>> VerticeLists { get; private set; }
 
         public ShapePreparator(EditorShape shape)
-        {
+        {            
+            BoundingBox = GetBoundingBox(shape);
             Points = MakePointList(shape);
-            UvPoints = MakeUvPointList(shape);
+            UvPoints = MakeUvPointList(shape);            
             Normals = MakeNormalList(shape);
             Shaders = MakeShaderList(shape);
             Images = MakeImageList(shape);
+            LightMatIds = MakeLightMatIdList(shape);
+            PrimStates = MakePrimStateList(shape);
+            VerticeLists = MakeVerticeLists(shape);
         }
 
-        private static List<string> MakeImageList(EditorShape shape)
+        private static List<List<(int, int, int)>> MakeVerticeLists(EditorShape shape)
         {
-            var images = new List<string>();
+            var result = new List<List<(int, int, int)>>();
 
-            foreach (var poly in shape.Polygons())
+            foreach (var lod in shape.Lods)
             {
-                var id = images.IndexOf(poly.TextureFilename);
-
-                if (id < 0)
+                var verticeList = new List<(int, int, int)>();
+                
+                foreach (var v in lod.Vertices())
                 {
-                    id = images.Count;
-                    images.Add(poly.TextureFilename);
+                    var id = verticeList.IndexOf((v.KujuPointId, v.KujuNormalId, v.KujuUvPointId));
+
+                    if (id < 0)
+                    {
+                        id = verticeList.Count;
+                        verticeList.Add((v.KujuPointId, v.KujuNormalId, v.KujuUvPointId));                        
+                    }
+
+                    v.KujuVertexId = id;
                 }
 
-                poly.KujuImageId = id;
+                result.Add(verticeList);
+                lod.KujuVerticeList = verticeList;                
             }
 
-            return images;
+            return result;
         }
 
-        private static List<string> MakeShaderList(EditorShape shape)
-        {
-            var shaders = new List<string>();
+        private static List<PrimState> MakePrimStateList(EditorShape shape) =>
+            MakePolygonPropertiesList(shape, p => GetPolygonPrimState(p), (p, id) => p.KujuPrimStateId = id);
 
-            foreach (var poly in shape.Polygons())
-            {
-                var id = shaders.IndexOf(GetShaderName(poly));
+        private static List<string> MakeImageList(EditorShape shape) =>
+            MakePolygonPropertiesList(shape, p => p.TextureFilename, (p, id) => p.KujuImageId = id);
 
-                if (id < 0)
-                {
-                    id = shaders.Count;
-                    shaders.Add(poly.TextureFilename);
-                }
+        private static List<string> MakeShaderList(EditorShape shape) =>
+            MakePolygonPropertiesList(shape, p => GetShaderName(p), (p, id) => p.KujuShaderId = id);
 
-                poly.KujuShaderId = id;
-            }
+        private static List<int> MakeLightMatIdList(EditorShape shape) =>
+            MakePolygonPropertiesList(shape, p => GetLightMatId(p), (p, id) => p.KujuLightMatId = id);
 
-            return shaders;
-        }
+        private static PrimState GetPolygonPrimState(EditorPolygon poly) => 
+            new ("PS_" + poly.MaterialType.ToString(), // For animated shapes better use matrix name instead of "PS"
+                poly.KujuShaderId,
+                poly.KujuImageId,
+                poly.MaterialType == Material.SolidBright || poly.MaterialType == Material.TransBright,
+                poly.MaterialType == Material.TransNorm || poly.MaterialType == Material.TransBright);        
 
         private static string GetShaderName(EditorPolygon poly)
         {
             if (poly.MaterialType == Material.SolidNorm || poly.MaterialType == Material.SolidBright)
-                return "TextDiff";
+                return "TexDiff";
             if (poly.MaterialType == Material.TransNorm || poly.MaterialType == Material.TransBright)
                 return "BlendATexDiff";
-            return "BlendATexDiff"; // for Alph materials also
+            return "BlendATexDiff"; // valid for Alph materials also
         }
+
+        private static int GetLightMatId(EditorPolygon poly)
+        {
+            if (poly.MaterialType == Material.SolidBright || poly.MaterialType == Material.TransBright)
+                return -8;
+            return -5;
+        }
+
         private static List<Vector2> MakeUvPointList(EditorShape shape)
         {
             var points = new List<Vector2>();
@@ -129,9 +169,8 @@ namespace ShapeData.Editor_shapes
             return points;
         }
 
-        private static List<Vector3> MakeNormalList(EditorShape shape)
-        {
-            var normals = new List<Vector3>();
+        private static void MakePolyAndPointNormals(EditorShape shape)
+        {            
 
             foreach (var poly in shape.Polygons())
             {
@@ -139,16 +178,90 @@ namespace ShapeData.Editor_shapes
                     poly.Vertices[0].Position, poly.Vertices[1].Position, poly.Vertices[2].Position };
                 var normal = Geometry.Geometry.MakePlaneFromFirstPoints(basePoints).Normal;
 
-                var index = FindVectorInList(normals, normal);
+                poly.Normal = normal;
+
+                foreach (var vertex in poly.Vertices)                
+                    vertex.Normal = normal;                
+            }
+
+            
+        }
+
+        private static void JoinSmoothedNormalsInShape(EditorShape shape)
+        {
+            foreach(var part in shape.Parts())
+                if (part.Smoothed)                
+                    JoinSmoothedNormalsInPart(part);                
+        }
+
+        private static void JoinSmoothedNormalsInPart(EditorPart part)
+        {
+            var pointNormals = new Dictionary<int, List<Vector3>>();
+
+            foreach (var v in part.Vertices())
+            {
+                if (!pointNormals.ContainsKey(v.KujuPointId))
+                    pointNormals.Add(v.KujuPointId, new List<Vector3>());
+
+                pointNormals[v.KujuPointId].Add(v.Normal);
+            }
+
+            var newNormals = new Dictionary<int, Vector3>();
+
+            foreach(var normalSet in pointNormals)
+            {
+                var newNormal = new Vector3(0, 0, 0);
+
+                foreach (var oldNormal in normalSet.Value)
+                    newNormal += oldNormal;
+
+                if (normalSet.Value.Count > 1)
+                    newNormal = Vector3.Normalize(newNormal);
+
+                newNormals.Add(normalSet.Key, newNormal);
+            }
+
+            foreach (var v in part.Vertices())
+                v.Normal = newNormals[v.KujuPointId];
+        }
+
+        private static List<Vector3> MakeNormalList(EditorShape shape)
+        {
+            MakePolyAndPointNormals(shape);
+
+            JoinSmoothedNormalsInShape(shape);
+
+            return SetNormalIds(shape);
+        }
+
+        private static List<Vector3> SetNormalIds(EditorShape shape)
+        {            
+            var normals = new List<Vector3>();
+
+            foreach (var poly in shape.Polygons())
+            {
+                var index = FindVectorInList(normals, poly.Normal);
 
                 if (index == -1)
                 {
                     poly.KujuNormalId = normals.Count;
-
-                    normals.Add(normal);
+                    normals.Add(poly.Normal);
                 }
                 else
                     poly.KujuNormalId = index;
+            }
+
+            foreach (var vertex in shape.Vertices())
+            {
+                var index = FindVectorInList(normals, vertex.Normal);
+
+                if (index == -1)
+                {
+                    vertex.KujuNormalId = normals.Count;
+                    normals.Add(vertex.Normal);
+                }
+                else
+                    vertex.KujuNormalId = index;
             }
 
             return normals;
@@ -198,18 +311,15 @@ namespace ShapeData.Editor_shapes
             var maxY = float.MinValue;
             var maxZ = float.MinValue;
 
-            foreach (var lod in shape.Lods)
-                foreach (var part in lod.Parts)
-                    foreach (var poly in part.Polygons)
-                        foreach (var v in poly.Vertices)
-                        {
-                            if (v.Position.X > maxX) maxX = v.Position.X;
-                            if (v.Position.X < minX) minX = v.Position.X;
-                            if (v.Position.Y > maxY) maxY = v.Position.Y;
-                            if (v.Position.Y < minY) minY = v.Position.Y;
-                            if (v.Position.Z > maxZ) maxZ = v.Position.Z;
-                            if (v.Position.Z < minZ) minZ = v.Position.Z;
-                        }
+            foreach (var v in shape.Vertices())
+            {
+                 if (v.Position.X > maxX) maxX = v.Position.X;
+                 if (v.Position.X < minX) minX = v.Position.X;
+                 if (v.Position.Y > maxY) maxY = v.Position.Y;
+                 if (v.Position.Y < minY) minY = v.Position.Y;
+                 if (v.Position.Z > maxZ) maxZ = v.Position.Z;
+                 if (v.Position.Z < minZ) minZ = v.Position.Z;
+            }
 
             maxX += boundingBoxMargin;
             maxY += boundingBoxMargin;
@@ -219,6 +329,31 @@ namespace ShapeData.Editor_shapes
             minZ -= boundingBoxMargin;
 
             return (new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
+        }
+
+        private static List<T> MakePolygonPropertiesList<T>(
+            EditorShape shape,
+            Func<EditorPolygon, T> getPropertyValue,
+            Action<EditorPolygon, int> kujuIndexSetter
+            )
+        {
+            var list = new List<T>();
+
+            foreach (var poly in shape.Polygons())
+            {
+                var value = getPropertyValue(poly);
+                var itemId = list.IndexOf(value);
+
+                if (itemId < 0)
+                {
+                    itemId = list.Count;
+                    list.Add(value);
+                }
+
+                kujuIndexSetter(poly, itemId);
+            }
+
+            return list;
         }
     }
 }

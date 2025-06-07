@@ -38,6 +38,8 @@ namespace ShapeData.Kuju_shape
                 FinalValues = new List<string>();
         }
 
+        public void AddBlock(DataBlock block) => Blocks.Add(block);
+
         public void PrintBlock(StringBuilder sb, int tab = 0)
         {
             sb.Append(Tabs(tab) + Name + " (");

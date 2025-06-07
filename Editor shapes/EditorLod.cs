@@ -24,7 +24,9 @@ namespace ShapeData
                 foreach (var vertex in part.Vertices())
                     yield return vertex;
         }
-        
+
+        public List<(int pointId, int normalId, int uvPointId)> KujuVerticeList { get; set; }
+
         public EditorLod(int distance)
         {
             Distance = distance;
@@ -43,6 +45,27 @@ namespace ShapeData
             }
 
             return null;
+        }
+
+        public int TriangleCount()
+        {
+            int count = 0;
+
+            foreach (var poly in Polygons())
+                if (poly.Vertices.Count >= 3)
+                    count += poly.Vertices.Count - 2;
+
+            return count;
+        }
+
+        public HashSet<int> GetPrimStateIdSet()
+        {
+            var primStateIds = new HashSet<int>();
+
+            foreach (var poly in Polygons())
+                primStateIds.Add(poly.KujuPrimStateId);
+
+            return primStateIds;
         }
 
         public bool DeletePart(string name) =>

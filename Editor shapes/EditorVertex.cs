@@ -10,10 +10,14 @@ namespace ShapeData
 
         // Texture coordinates
         public Vector2 UvPosition { get; set; }
-
+        
+        public Vector3 Normal { get; set; }
+        
         // Kuju shape array indexes
-        public int KujuPointId;
-        public int KujuUvPointId;
+        public int KujuPointId { get; set; }
+        public int KujuUvPointId { get; set; }
+        public int KujuNormalId { get; set; }
+        public int KujuVertexId { get; set; }
 
         public EditorVertex(float x, float y, float z, float u, float v)
         {

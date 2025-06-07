@@ -365,6 +365,39 @@ namespace ShapeData
             Assert.AreEqual(") 3 4", s[2].Substring(0, 5));
         }
 
+        [Test]
+        public async Task ShapeCreationTest()
+        {
+            var editorShape = new EditorShape("ThreePolyShapeSmooth.s");
+
+            var part = editorShape.Lods[0].AddPart(new EditorPart("Angle", new ReplicationAtFixedPos(), true));
+
+            part.AddPolygon(new EditorPolygon(0, new List<EditorVertex> {
+                new EditorVertex(0.6f, 0.6f, -0.6f, 1, 0),                
+                new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
+                new EditorVertex(0.6f, -0.6f, 0.6f, 0, 0)
+            }));
+
+            part.AddPolygon(new EditorPolygon(1, new List<EditorVertex> {
+                new EditorVertex(0.6f, -0.6f, 0.6f, 0, 0),
+                new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
+                new EditorVertex(-0.6f, 0.6f, 0.6f, 1, 0)
+            }));
+
+            part.AddPolygon(new EditorPolygon(2, new List<EditorVertex> {
+                new EditorVertex(-0.6f, 0.6f, 0.6f, 1, 0),
+                new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
+                new EditorVertex(0.6f, 0.6f, -0.6f, 0, 0)
+            }));
+
+            var (s, sd) = KujuShapeBuilder.BuildShapeFile(editorShape);
+
+            await GeneralMethods.SaveStringToFile(editorShape.ShapeName, s);
+            await GeneralMethods.SaveStringToFile(editorShape.ShapeName + 'd', sd);
+
+            Assert.AreEqual("", "");
+        }
+
         private static IPartReplication MakeReplicationParams(string repType, float repParam1, float repParam2, bool leaveAtLeastOne)
         {
             return repType switch
