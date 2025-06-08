@@ -83,8 +83,8 @@ namespace ShapeData.Kuju_shape
                 new DataBlock("Align", new List<string> { "None" }),
                 new DataBlock("Description", new List<string> { shapeName }) });
 
-        public static string GetFfeditCommandLine(string shapeName) =>        
-            "ffeditc_unicode.exe " + '"' + shapeName + '"';
+        public static string GetFfeditCommandLine(string directory, string shapeName) =>
+            directory + "ffeditc_unicode.exe " + '"' + directory + shapeName + '"' + " /o:out\\.s";
         
         private static DataBlock ShapeLodControls(EditorShape shape, ShapePreparator preparedShape)
         {

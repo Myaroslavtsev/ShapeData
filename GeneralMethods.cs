@@ -1,10 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ShapeData
 {
+    public enum DataFileFormat
+    {
+        PlainText,
+        UTF16LE
+    }
+
     static class GeneralMethods
     {
         public static bool RemoveListItems<T>(List<T> list, Predicate<T> condition)
@@ -20,14 +27,29 @@ namespace ShapeData
 
         public static async Task<string> ReadFileToString(string fileName)
         {
-            using System.IO.StreamReader reader = new(fileName);
+            using StreamReader reader = new(fileName);
             return await reader.ReadToEndAsync();
         }
 
-        public static async Task SaveStringToFile(string fileName, string data)
+        public static async Task SaveStringToFile(string fileName, string data, DataFileFormat format)
         {
-            using System.IO.StreamWriter writer = new(fileName, false, new UnicodeEncoding(false, true)); // == Encoding.Unicode
-            await writer.WriteAsync(data);
+            switch (format)
+            {
+                case DataFileFormat.PlainText:
+                    {
+                        using StreamWriter writer = new(fileName);
+                        await writer.WriteAsync(data);
+                        break;
+                    }
+
+                case DataFileFormat.UTF16LE:
+                    {
+                        using StreamWriter writer = 
+                            new(fileName, false, new UnicodeEncoding(false, true)); // == Encoding.Unicode
+                        await writer.WriteAsync(data);
+                        break;
+                    }
+            }            
         }
     }
 }

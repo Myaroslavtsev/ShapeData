@@ -42,7 +42,9 @@ namespace ShapeData.Editor_shapes
         public List<List<(int pointId, int normalId, int uvPointId)>> VerticeLists { get; private set; }
 
         public ShapePreparator(EditorShape shape)
-        {            
+        {
+            shape.OrderLods();
+
             BoundingBox = GetBoundingBox(shape);
             Points = MakePointList(shape);
             UvPoints = MakeUvPointList(shape);            
@@ -83,16 +85,16 @@ namespace ShapeData.Editor_shapes
         }
 
         private static List<PrimState> MakePrimStateList(EditorShape shape) =>
-            MakePolygonPropertiesList(shape, p => GetPolygonPrimState(p), (p, id) => p.KujuPrimStateId = id);
+            MakeItemList(shape.Polygons(), p => GetPolygonPrimState(p), (s, sList) => sList.IndexOf(s), (p, id) => p.KujuPrimStateId = id);
 
         private static List<string> MakeImageList(EditorShape shape) =>
-            MakePolygonPropertiesList(shape, p => p.TextureFilename, (p, id) => p.KujuImageId = id);
+            MakeItemList(shape.Polygons(), p => p.TextureFilename, (i, iList) => iList.IndexOf(i), (p, id) => p.KujuImageId = id);
 
         private static List<string> MakeShaderList(EditorShape shape) =>
-            MakePolygonPropertiesList(shape, p => GetShaderName(p), (p, id) => p.KujuShaderId = id);
+            MakeItemList(shape.Polygons(), p => GetShaderName(p), (s, sList) => sList.IndexOf(s), (p, id) => p.KujuShaderId = id);
 
         private static List<int> MakeLightMatIdList(EditorShape shape) =>
-            MakePolygonPropertiesList(shape, p => GetLightMatId(p), (p, id) => p.KujuLightMatId = id);
+            MakeItemList(shape.Polygons(), p => GetLightMatId(p), (m, mList) => mList.IndexOf(m), (p, id) => p.KujuLightMatId = id);
 
         private static PrimState GetPolygonPrimState(EditorPolygon poly) => 
             new ("PS_" + poly.MaterialType.ToString(), // For animated shapes better use matrix name instead of "PS"
@@ -118,59 +120,13 @@ namespace ShapeData.Editor_shapes
             return -5;
         }
 
-        private static List<Vector2> MakeUvPointList(EditorShape shape)
-        {
-            var points = new List<Vector2>();
+        private static List<Vector2> MakeUvPointList(EditorShape shape) =>
+            MakeItemList(shape.Vertices(), vertex => vertex.UvPosition, 
+                (pos, points) => FindVector2InList(points, pos), (vertex, id) => vertex.KujuUvPointId = id);
 
-            foreach (var part in shape.Parts())
-            {
-                var partPoints = new List<Vector2>();
-
-                foreach (var vertex in part.Vertices())
-                {
-                    var index = FindVectorInList(partPoints, vertex.UvPosition);
-
-                    if (index == -1)
-                    {
-                        vertex.KujuUvPointId = points.Count;
-
-                        partPoints.Add(vertex.UvPosition);
-                        points.Add(vertex.UvPosition);
-                    }
-                    else
-                        vertex.KujuUvPointId = index;
-                }
-            }
-
-            return points;
-        }
-
-        private static List<Vector3> MakePointList(EditorShape shape)
-        {
-            var points = new List<Vector3>();
-
-            foreach (var part in shape.Parts())
-            {
-                var partPoints = new List<Vector3>();
-
-                foreach (var vertex in part.Vertices())
-                {
-                    var index = FindVectorInList(partPoints, vertex.Position);
-
-                    if (index == -1)
-                    {
-                        vertex.KujuPointId = points.Count;
-
-                        partPoints.Add(vertex.Position);
-                        points.Add(vertex.Position);
-                    }
-                    else
-                        vertex.KujuPointId = index;
-                }
-            }
-
-            return points;
-        }
+        private static List<Vector3> MakePointList(EditorShape shape) =>
+            MakeItemList(shape.Vertices(), vertex => vertex.Position,
+                (pos, points) => FindVector3InList(points, pos), (vertex, id) => vertex.KujuPointId = id);
 
         private static void MakePolyAndPointNormals(EditorShape shape)
         {            
@@ -236,7 +192,7 @@ namespace ShapeData.Editor_shapes
 
             foreach (var poly in shape.Polygons())
             {
-                var index = FindVectorInList(normals, poly.Normal);
+                var index = FindVector3InList(normals, poly.Normal);
 
                 if (index == -1)
                 {
@@ -249,7 +205,7 @@ namespace ShapeData.Editor_shapes
 
             foreach (var vertex in shape.Vertices())
             {
-                var index = FindVectorInList(normals, vertex.Normal);
+                var index = FindVector3InList(normals, vertex.Normal);
 
                 if (index == -1)
                 {
@@ -263,7 +219,7 @@ namespace ShapeData.Editor_shapes
             return normals;
         }
 
-        private static int FindVectorInList(List<Vector2> list, Vector2 vector)
+        private static int FindVector2InList(List<Vector2> list, Vector2 vector)
         {
             for (var i = 0; i < list.Count; i++)
                 if (AlmostEquals(list[i], vector))
@@ -272,7 +228,7 @@ namespace ShapeData.Editor_shapes
             return -1;
         }
 
-        private static int FindVectorInList(List<Vector3> list, Vector3 vector)
+        private static int FindVector3InList(List<Vector3> list, Vector3 vector)
         {
             for (var i = 0; i < list.Count; i++)
                 if (AlmostEquals(list[i], vector))
@@ -307,14 +263,14 @@ namespace ShapeData.Editor_shapes
             var maxY = float.MinValue;
             var maxZ = float.MinValue;
 
-            foreach (var v in shape.Vertices())
+            foreach (var vertex in shape.Vertices())
             {
-                 if (v.Position.X > maxX) maxX = v.Position.X;
-                 if (v.Position.X < minX) minX = v.Position.X;
-                 if (v.Position.Y > maxY) maxY = v.Position.Y;
-                 if (v.Position.Y < minY) minY = v.Position.Y;
-                 if (v.Position.Z > maxZ) maxZ = v.Position.Z;
-                 if (v.Position.Z < minZ) minZ = v.Position.Z;
+                 if (vertex.Position.X > maxX) maxX = vertex.Position.X;
+                 if (vertex.Position.X < minX) minX = vertex.Position.X;
+                 if (vertex.Position.Y > maxY) maxY = vertex.Position.Y;
+                 if (vertex.Position.Y < minY) minY = vertex.Position.Y;
+                 if (vertex.Position.Z > maxZ) maxZ = vertex.Position.Z;
+                 if (vertex.Position.Z < minZ) minZ = vertex.Position.Z;
             }
 
             maxX += boundingBoxMargin;
@@ -327,29 +283,28 @@ namespace ShapeData.Editor_shapes
             return (new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
         }
 
-        private static List<T> MakePolygonPropertiesList<T>(
-            EditorShape shape,
-            Func<EditorPolygon, T> getPropertyValue,
-            Action<EditorPolygon, int> kujuIndexSetter
-            )
+        private static List<T> MakeItemList<T, U>(
+            IEnumerable<U> objects,
+            Func<U, T> getItemFromObject,
+            Func<T, List<T>, int> getItemIndex,
+            Action<U, int> setItemIndex)
         {
-            var list = new List<T>();
+            var itemList = new List<T>();
 
-            foreach (var poly in shape.Polygons())
+            foreach (var obj in objects)
             {
-                var value = getPropertyValue(poly);
-                var itemId = list.IndexOf(value);
+                var index = getItemIndex(getItemFromObject(obj), itemList);
 
-                if (itemId < 0)
+                if (index == -1)
                 {
-                    itemId = list.Count;
-                    list.Add(value);
+                    index = itemList.Count;
+                    itemList.Add(getItemFromObject(obj));
                 }
 
-                kujuIndexSetter(poly, itemId);
+                setItemIndex(obj, index);
             }
 
-            return list;
+            return itemList;
         }
     }
 }

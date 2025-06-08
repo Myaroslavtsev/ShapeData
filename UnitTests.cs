@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
+using System.IO;
+using System.Text;
 //using NUnit.Framework.Legacy; // for NUnit 4.0 and newer
 
 namespace ShapeData
@@ -370,30 +372,64 @@ namespace ShapeData
 
             var part = editorShape.Lods[0].AddPart(new EditorPart("Angle", new ReplicationAtFixedPos(), true));
 
-            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
-                new EditorVertex(0.6f, 0.6f, -0.6f, 1, 0),                
-                new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
-                new EditorVertex(0.6f, -0.6f, 0.6f, 0, 0)
-            }));
-
-            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
-                new EditorVertex(0.6f, -0.6f, 0.6f, 0, 0),
-                new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
-                new EditorVertex(-0.6f, 0.6f, 0.6f, 1, 0)
-            }));
-
-            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
-                new EditorVertex(-0.6f, 0.6f, 0.6f, 1, 0),
-                new EditorVertex(0.6f, 0.6f, 0.6f, 0, 1),
-                new EditorVertex(0.6f, 0.6f, -0.6f, 0, 0)
-            }));
+            AddTheePolygons(part, 0.6f);
 
             var (s, sd) = KujuShapeBuilder.BuildShapeFile(editorShape);
 
-            await GeneralMethods.SaveStringToFile(editorShape.ShapeName, s);
-            await GeneralMethods.SaveStringToFile(editorShape.ShapeName + 'd', sd);
+            await GeneralMethods.SaveStringToFile(editorShape.ShapeName, s, DataFileFormat.UTF16LE);
+            await GeneralMethods.SaveStringToFile(editorShape.ShapeName + 'd', sd, DataFileFormat.UTF16LE);
 
-            Assert.AreEqual("", "");
+            // Assertion by program is impossible. Try opening shape in MSTS.
+        }
+
+        [Test]
+        public async Task MultiLodShapeCreationTest()
+        {
+            var editorShape = new EditorShape("ThreePolyShapeWithLods.s");
+
+            var part = editorShape.Lods[0].AddPart(new EditorPart("Angle", new ReplicationAtFixedPos(), false));
+
+            AddTheePolygons(part, 2.4f);
+
+            var lod = editorShape.AddLod(new EditorLod(100));
+
+            part = lod.AddPart(new EditorPart("Angle", new ReplicationAtFixedPos(), false));
+
+            AddTheePolygons(part, 1.2f);
+
+            lod = editorShape.AddLod(new EditorLod(20));
+
+            part = lod.AddPart(new EditorPart("Angle", new ReplicationAtFixedPos(), true));
+
+            AddTheePolygons(part, 0.6f);
+
+            var (s, sd) = KujuShapeBuilder.BuildShapeFile(editorShape);
+
+            await GeneralMethods.SaveStringToFile(editorShape.ShapeName, s, DataFileFormat.UTF16LE);
+            await GeneralMethods.SaveStringToFile(editorShape.ShapeName + 'd', sd, DataFileFormat.UTF16LE);
+
+            // Assertion by program is impossible. Try opening shape in MSTS.
+        }
+
+        private void AddTheePolygons(EditorPart part, float size)
+        {
+            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
+                new EditorVertex(size, size, -size, 1, 0),
+                new EditorVertex(size, size, size, 0, 1),
+                new EditorVertex(size, -size, size, 0, 0)
+            }));
+
+            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
+                new EditorVertex(size, -size, size, 0, 0),
+                new EditorVertex(size, size, size, 0, 1),
+                new EditorVertex(-size, size, size, 1, 0)
+            }));
+
+            part.AddPolygon(new EditorPolygon(new List<EditorVertex> {
+                new EditorVertex(-size, size, size, 1, 0),
+                new EditorVertex(size, size, size, 0, 1),
+                new EditorVertex(size, size, -size, 0, 0)
+            }));
         }
 
         private static IPartReplication MakeReplicationParams(string repType, float repParam1, float repParam2, bool leaveAtLeastOne)

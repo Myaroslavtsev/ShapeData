@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ShapeData
 {
@@ -9,9 +10,8 @@ namespace ShapeData
         public string ShapeComment;
 
         // Objects
-        private readonly List<EditorLod> lods;
+        public List<EditorLod> Lods { get; private set; }
 
-        public List<EditorLod> Lods => lods;
 
         public IEnumerable<EditorPart> Parts()
         {
@@ -38,7 +38,7 @@ namespace ShapeData
         public EditorShape(string shapeName)
         {
             ShapeName = shapeName;
-            lods = new List<EditorLod> { new EditorLod(2000) };
+            Lods = new List<EditorLod> { new EditorLod(2000) };
         }
 
         public EditorLod AddLod(EditorLod lod)
@@ -46,11 +46,11 @@ namespace ShapeData
             if (lod == null)
                 return null;
 
-            var sameDistanceLod = lods.Find(l => l.Distance == lod.Distance);
+            var sameDistanceLod = Lods.Find(l => l.Distance == lod.Distance);
 
             if (sameDistanceLod == null)
             {
-                lods.Add(lod);
+                Lods.Add(lod);
                 return lod;
             }
             else
@@ -58,6 +58,11 @@ namespace ShapeData
         }
 
         public bool DeleteLod(int distance) =>
-            GeneralMethods.RemoveListItems(lods, lod => lod.Distance == distance);
+            GeneralMethods.RemoveListItems(Lods, lod => lod.Distance == distance);
+
+        public void OrderLods()
+        {
+            Lods = Lods.OrderBy(lod => lod.Distance).ToList();
+        }
     }
 }
