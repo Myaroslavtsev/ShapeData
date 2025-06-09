@@ -1,6 +1,7 @@
 ﻿using ShapeData.Geometry;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ShapeData.Editor_shapes
 {
@@ -32,6 +33,29 @@ namespace ShapeData.Editor_shapes
             }
             return newShape;
         }
+
+        private static List<EditorPart> ReplicatePartNew(EditorPart part, List<EditorTrackSection> trackSections)
+        {
+            var replicatedParts = new List<EditorPart>();
+            
+            foreach (var section in trackSections)
+            {
+                var (subsections, finalSection) = SectionTransformer.SplitTrackSection(section, part.ReplicationParams);
+
+                var typicalSegment = ScaleAndBendPart(part, subsections.First());
+                var finalSegment = TrimPart(part, finalSection);
+
+                replicatedParts.Add(AssemblePartSections(part, subsections, finalSection, typicalSegment, finalSegment));
+            }
+
+            return replicatedParts;
+        }
+
+
+
+
+
+
 
         private static List<EditorTrackSection> GetSectionsFromShape(KujuTrackShape trackShape, KujuTsectionDat tsectionDat)
         {

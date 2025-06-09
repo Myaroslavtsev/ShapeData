@@ -9,6 +9,11 @@ namespace ShapeData.Editor_shapes
     {
         const double accuracy = 1e-5;
 
+        
+
+
+
+
         public static EditorPart TransposePart(EditorPart part, Direction direction)
         {
             foreach (var v in part.Vertices()) 

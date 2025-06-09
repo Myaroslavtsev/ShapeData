@@ -9,7 +9,7 @@ namespace ShapeData
 
         public bool Smoothed { get; set; }
 
-        public IPartReplication ReplicationParams { get; private set; }
+        public PartReplication Replication { get; private set; }
 
         // Polygon list
         private readonly List<EditorPolygon> polygons;
@@ -26,12 +26,12 @@ namespace ShapeData
         // Methods
         public EditorPart(
             string name,
-            IPartReplication replicationParams,
+            PartReplication replication,
             bool smoothed = false)
         {
             PartName = name;
             Smoothed = smoothed;
-            ReplicationParams = replicationParams;
+            Replication = replication;
             polygons = new List<EditorPolygon>();
         }
 
@@ -47,8 +47,8 @@ namespace ShapeData
         public EditorPart Copy(bool setFixedPosReplication)
         {
             var copy = setFixedPosReplication ?
-                new EditorPart(PartName, new ReplicationAtFixedPos(), Smoothed) :
-                new EditorPart(PartName, ReplicationParams, Smoothed);
+                new EditorPart(PartName, PartReplication.NoReplication(), Smoothed) :
+                new EditorPart(PartName, Replication, Smoothed);
 
             foreach (var polygon in polygons)
             {
@@ -59,6 +59,5 @@ namespace ShapeData
         }
 
         public string IsSmoothed() => Smoothed ? "Smoothed" : "Unsmoothed";
-        public string LeaveAtLeastOne() => ReplicationParams.LeaveAtLeastOnePart ? "Leave" : "NotLeave";
     }
 }
