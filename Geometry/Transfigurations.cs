@@ -1,10 +1,12 @@
-﻿using System;
+﻿/// Describes various geometrical operations
+
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
 namespace ShapeData.Geometry
 {
-    class Geometry
+    class Transfigurations
     {
         public static Direction FindEndDirection(Trajectory trajectory, Direction startDirection)
         {

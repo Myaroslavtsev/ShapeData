@@ -1,4 +1,6 @@
-﻿using System;
+﻿/// Transforms EditorShape into large strings to be further saved in .s, .sd, .ref and .bat files.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

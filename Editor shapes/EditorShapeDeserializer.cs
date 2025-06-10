@@ -1,4 +1,6 @@
-﻿using System;
+﻿/// Converts a string data received from .csv file into EditorShape instance.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 

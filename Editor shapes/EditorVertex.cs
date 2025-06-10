@@ -1,4 +1,7 @@
-﻿using ShapeData.Geometry;
+﻿/// Data structure. Editor vertex is used to store all data about one corner of EditorPolygon, 
+/// consisting of 3d coords and texture coords.
+
+using ShapeData.Geometry;
 using System.Numerics;
 
 namespace ShapeData

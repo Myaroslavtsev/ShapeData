@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿/// Data structure. A primary structure proposed to describe shapes in a simple human-readable format.
+/// Subdivides by lods, parts, polygons and vertices.
+
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ShapeData
@@ -63,6 +66,14 @@ namespace ShapeData
         public void OrderLods()
         {
             Lods = Lods.OrderBy(lod => lod.Distance).ToList();
+        }
+
+        public void DeleteUnvalidPolys()
+        {
+            foreach (var part in Parts())
+                for (int i = 0; i < part.Polygons.Count; i++)
+                    if (part.Polygons[i].Vertices.Count < 3)
+                        part.Polygons.RemoveAt(i);
         }
     }
 }

@@ -167,7 +167,7 @@ namespace ShapeData
 
             var points = Polygon.Vertices.Select(v => v.Position).ToList();
 
-            var dots = Geometry.Geometry.MakeSomeUVcoords(points);
+            var dots = Transfigurations.MakeSomeUVcoords(points);
 
             Assert.AreEqual(0, dots[0].U, 1e-5); Assert.AreEqual(1d, dots[0].V, 1e-5);
             Assert.AreEqual(2d / 3d, dots[1].U, 1e-5); Assert.AreEqual(1d, dots[1].V, 1e-5);
@@ -188,7 +188,7 @@ namespace ShapeData
 
             var points = Polygon.Vertices.Select(v => v.Position).ToList();
 
-            var dots = Geometry.Geometry.MakeSomeUVcoords(points);
+            var dots = Transfigurations.MakeSomeUVcoords(points);
 
             Assert.AreEqual(0, dots[0].U, 1e-5); Assert.AreEqual(12d / 15d / Math.Sqrt(2), dots[0].V, 1e-5);
             Assert.AreEqual(2d / 3d, dots[1].U, 1e-5); Assert.AreEqual(12d / 15d / Math.Sqrt(2), dots[1].V, 1e-5);
@@ -270,7 +270,7 @@ namespace ShapeData
                     new EditorVertex(0, 1.7f, 0, 0.5f, 1)
                 }));
 
-            var replica = await ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
+            var replica = await ShapeReplicator.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
 
             Assert.AreEqual(replicaCount, replica.Lods[0].Parts.Count);
         }
@@ -318,7 +318,7 @@ namespace ShapeData
                     new EditorVertex(0, 1.7f, 0, 0.5f, 1)
                 }));
 
-            var replica = await ShapeReplication.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
+            var replica = await ShapeReplicator.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
 
             var lastPartPoly = replica.Lods[0].Parts.Last().Polygons[0];
             Assert.AreEqual(X, lastPartPoly.Vertices[2].Position.X, 1e-5f);

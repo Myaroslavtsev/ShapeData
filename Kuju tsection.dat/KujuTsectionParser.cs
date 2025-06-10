@@ -1,4 +1,6 @@
-﻿using System;
+﻿/// Reads tsection.dat file and returns an instance of KujuTsectionDat class
+
+using System;
 using System.Globalization;
 using System.Threading.Tasks;
 

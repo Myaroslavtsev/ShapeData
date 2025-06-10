@@ -1,4 +1,7 @@
-﻿using ShapeData.Geometry;
+﻿/// Data structure. Describes a line or curve in space with its start and finish vectors.
+/// Also corresponds to a one track section (part of a track shape) in tsection.dat file.
+
+using ShapeData.Geometry;
 
 namespace ShapeData.Editor_shapes
 {
@@ -7,20 +10,20 @@ namespace ShapeData.Editor_shapes
         public Direction StartDirection { get; }
         public Direction EndDirection { get; }
 
-        public Trajectory SectionTrajectory { get; }
+        public Trajectory Traject { get; }
 
         public EditorTrackSection()
         {
             StartDirection = new Direction();
             EndDirection = new Direction();
-            SectionTrajectory = new Trajectory();
+            Traject = new Trajectory();
         }
 
         public EditorTrackSection(Direction startDirection, Trajectory trajectory)
         {
-            SectionTrajectory = trajectory;
+            Traject = trajectory;
             StartDirection = startDirection;
-            EndDirection = Geometry.Geometry.FindEndDirection(trajectory, startDirection);
+            EndDirection = Transfigurations.FindEndDirection(trajectory, startDirection);
         }
     }
 }

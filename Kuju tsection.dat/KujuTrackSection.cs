@@ -1,4 +1,6 @@
-﻿using ShapeData.Geometry;
+﻿/// Data structure to contain trajectory of the one track section. A track shape can contain multiple track sections.
+
+using ShapeData.Geometry;
 
 namespace ShapeData
 {

@@ -1,210 +1,148 @@
-﻿using ShapeData.Geometry;
+﻿/// Performs various transformations with EditorShape instances and their polygons
+
+using ShapeData.Geometry;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace ShapeData.Editor_shapes
 {
     class PartTransformer
     {
-        const double accuracy = 1e-5;
-
-        
-
-
-
-
         public static EditorPart TransposePart(EditorPart part, Direction direction)
         {
             foreach (var v in part.Vertices()) 
-                v.Position = Geometry.Geometry.TransposePoint(v.Position, direction);
+                v.Position = Transfigurations.TransposePoint(v.Position, direction);
 
             return part;
         }
 
-        public static EditorPart BendPart(EditorPart part, Trajectory trajectory, IPartReplication replicationData)
+        public static EditorPolygon TransposePoly(EditorPolygon polygon, Direction direction)
         {
-            var replicationParams = GetReplicationParamDictionary(replicationData);
+            foreach (var v in polygon.Vertices)
+                v.Position = Transfigurations.TransposePoint(v.Position, direction);
 
-            if (!replicationParams.ContainsKey("OriginalLength"))
-                return part;
-
-            double originalLength = replicationParams["OriginalLength"];
-
-            double scaleFactor = originalLength / trajectory.Length;
-
-            foreach(var v in part.Vertices())
-                v.Position = Geometry.Geometry.BendPoint(v.Position, trajectory, scaleFactor);
-
-            return part;
+            return polygon;
         }
 
-        public static List<Direction> SplitSectionByFixedIntervals(EditorTrackSection section, IPartReplication replicationData) =>
-            SplitSectionByIntervals(section, replicationData, false, "Interval");
+        public static List<EditorPolygon> ScaleAndBendPart(EditorPart part, EditorTrackSection subsection)
+        {            
+            float scaleFactor = 1;
 
-        public static List<Direction> SplitSectionByEvenIntervals(EditorTrackSection section, IPartReplication replicationData) =>
-            SplitSectionByIntervals(section, replicationData, true, "MinInterval");
+            if (part.Replication.GetReplicationParam("OriginalLength", out var originalLength))
+                scaleFactor = (float)subsection.Traject.Length / originalLength;
 
-        public static List<Direction> SplitSectionByEvenArcs(EditorTrackSection section, IPartReplication replicationData) =>
-            SplitSectionByIntervals(section, replicationData, true, "MinLength");
-
-        public static List<Direction> SplitSectionByEvenDeflection(
-            EditorTrackSection section,
-            IPartReplication replicationData)
-        {
-            double interval = section.SectionTrajectory.Radius *
-                AngleIntervalByDeflection(section, replicationData) * Math.PI / 180;
-
-            if (section.SectionTrajectory.Radius == 0)
-                return new List<Direction> { section.StartDirection };
+            if (part.Replication.BendPart)
+                return ScaleAndBendPolys(part.Polygons, scaleFactor, subsection.Traject);
             else
-                return SplitCurvedSection(section, interval, true, replicationData.LeaveAtLeastOnePart);
+                return ScalePolys(part.Polygons, scaleFactor);
         }
 
-        private static List<Direction> SplitSectionByIntervals(
-            EditorTrackSection section,
-            IPartReplication replicationData,
-            bool arrangeEvenly,
-            string replicationParamName)
+        private static List<EditorPolygon> ScaleAndBendPolys(List<EditorPolygon> polygons, float scaleFactor, Trajectory bendTrajectory)
         {
-            var replicationParams = GetReplicationParamDictionary(replicationData);
+            List<EditorPolygon> scaledPolys = new();
 
-            if (!replicationParams.ContainsKey(replicationParamName))
-                return new List<Direction> { section.StartDirection };
-
-            double interval = replicationParams[replicationParamName];
-
-            if (section.SectionTrajectory.Radius == 0)
-                return SplitStraightSection(section, interval, arrangeEvenly, replicationData.LeaveAtLeastOnePart);
-            else
-                return SplitCurvedSection(section, interval, arrangeEvenly, replicationData.LeaveAtLeastOnePart);
-        }
-
-        public static Trajectory GetPartialTrajectoryByArc(EditorTrackSection section, IPartReplication replicationData)
-        {
-            var replicationParams = GetReplicationParamDictionary(replicationData);
-
-            if (!replicationParams.ContainsKey("MinLength"))
-                return section.SectionTrajectory;
-
-            double interval = replicationParams["MinLength"];
-
-            if (section.SectionTrajectory.Radius == 0)
-                return new Trajectory(
-                    StraightInterval(interval, section.SectionTrajectory.Straight, true),
-                    0, 0);
-            else
-                return new Trajectory(0,
-                    section.SectionTrajectory.Radius,
-                    AngleInterval(interval, section.SectionTrajectory.Radius, section.SectionTrajectory.Angle, true));
-        }
-
-        public static Trajectory GetPartialTrajectoryByDeflection(EditorTrackSection section, IPartReplication replicationData)
-        {
-            if (section.SectionTrajectory.Radius == 0)
-                return section.SectionTrajectory;
-
-            double angleInterval = AngleIntervalByDeflection(section, replicationData);
-
-            return new Trajectory(0, section.SectionTrajectory.Radius, angleInterval);
-        }
-
-        private static double AngleIntervalByDeflection(EditorTrackSection section, IPartReplication replicationData)
-        {
-            if (section.SectionTrajectory.Radius == 0)
-                return section.SectionTrajectory.Angle;
-
-            var replicationParams = GetReplicationParamDictionary(replicationData);
-
-            if (!replicationParams.ContainsKey("MaxDeflection"))
-                return section.SectionTrajectory.Angle;
-
-            double deflection = replicationParams["MaxDeflection"];
-
-            double angleInterval = 2 * Geometry.Geometry.Rad2Deg(Math.Acos(1 - deflection / section.SectionTrajectory.Radius));
-
-            return section.SectionTrajectory.Angle / Math.Floor(section.SectionTrajectory.Angle / angleInterval);
-        }
-
-        private static List<Direction> SplitStraightSection(
-            EditorTrackSection section,
-            double interval,
-            bool arrangeEvenly,
-            bool leaveAtLeastOneDirection)
-        {
-            if (interval == 0)
-                return new List<Direction> { section.StartDirection };
-
-            var directions = new List<Direction>();
-            var partialTrajectory = new Trajectory();
-
-            interval = StraightInterval(interval, section.SectionTrajectory.Straight, arrangeEvenly);
-
-            for (partialTrajectory.Straight = 0;
-                 section.SectionTrajectory.Straight - partialTrajectory.Straight > interval - accuracy;
-                 partialTrajectory.Straight += interval)
-                directions.Add(Geometry.Geometry.FindEndDirection(partialTrajectory, section.StartDirection));
-
-            if (directions.Count == 0 && leaveAtLeastOneDirection)
-                return new List<Direction> { section.StartDirection };
-
-            return directions;
-        }
-
-        private static double StraightInterval(double interval, double straight, bool arrangeEvenly)
-        {
-            if (arrangeEvenly)
-                return straight / Math.Floor(straight / interval);
-
-            return interval;
-        }
-
-        private static List<Direction> SplitCurvedSection(
-            EditorTrackSection section,
-            double interval,
-            bool arrangeEvenly,
-            bool leaveAtLeastOneDirection)
-        {
-            if (interval == 0)
-                return new List<Direction> { section.StartDirection };
-
-            var directions = new List<Direction>();
-            var partialTrajectory = new Trajectory
+            foreach (var poly in polygons)
             {
-                Radius = section.SectionTrajectory.Radius
-            };
+                var transformedPoly = poly.Copy();
 
-            double angleInterval = AngleInterval(interval, section.SectionTrajectory.Radius, section.SectionTrajectory.Angle, arrangeEvenly);
+                foreach (var v in transformedPoly.Vertices)
+                    v.Position = Transfigurations.BendPoint(v.Position, bendTrajectory, scaleFactor);
 
-            for (partialTrajectory.Angle = 0;
-                 Math.Abs(section.SectionTrajectory.Angle - partialTrajectory.Angle) > Math.Abs(angleInterval + accuracy);
-                 partialTrajectory.Angle += angleInterval)
-                directions.Add(Geometry.Geometry.FindEndDirection(partialTrajectory, section.StartDirection));
+                scaledPolys.Add(transformedPoly);                
+            }
 
-            if (directions.Count == 0 && leaveAtLeastOneDirection)
-                return new List<Direction> { section.StartDirection };
-
-            return directions;
+            return scaledPolys;
         }
 
-        private static double AngleInterval(double interval, double radius, double angle, bool arrangeEvenly)
-        {
-            double angleInterval = interval * 180 / Math.PI / radius;
+        private static List<EditorPolygon> ScalePolys(List<EditorPolygon> polygons, float scaleFactor)
+        {            
+            List<EditorPolygon> scaledPolys = new();
+            
+            foreach (var poly in polygons)
+            {
+                var transformedPoly = poly.Copy();
 
-            if (arrangeEvenly)
-                angleInterval = Math.Abs(angle) / Math.Floor(Math.Abs(angle / angleInterval));
+                foreach (var v in transformedPoly.Vertices)
+                    v.Position = new(v.Position.X, v.Position.Y, v.Position.Z * scaleFactor);
 
-            return angleInterval * Math.Sign(angle);
+                scaledPolys.Add(transformedPoly);
+            }            
+
+            return scaledPolys;
         }
 
-        private static Dictionary<string, float> GetReplicationParamDictionary(IPartReplication ReplicationData)
+        public static List<EditorPolygon> TrimPart(EditorPart part, EditorTrackSection finalSection)
         {
-            var parameters = new Dictionary<string, float>();
+            if (finalSection is null)
+                return null;
 
-            foreach (var (Name, Value) in ReplicationData.GetParams())
-                parameters.Add(Name, Value);
+            var maxZ = finalSection.Traject.Length;
 
-            return parameters;
+            for (int i = 0; i < part.Polygons.Count; i++)
+            {
+                var pointsToTrim = part.Polygons[i].Vertices.Select(v => v.Position.Z).Count(z => z > maxZ);
+
+                if (pointsToTrim == 0)
+                    continue;
+
+                if (pointsToTrim == part.Polygons[i].Vertices.Count)
+                {
+                    part.Polygons.RemoveAt(i);
+                    continue;
+                }    
+
+                foreach(var v in part.Polygons[i].Vertices)
+                {
+                    if (v.Position.Z > maxZ)
+                    {
+                        if (!part.Replication.ScaleTexture) 
+                            v.UvPosition = new Vector2(v.UvPosition.X, (float)(v.UvPosition.Y * v.Position.Z / maxZ));
+                        v.Position = new Vector3(v.Position.X, v.Position.Z, (float)maxZ);
+                    }
+                }
+            }
+
+            return part.Polygons;
+        }
+
+        public static EditorPart AssemblePartSections(EditorPart part, 
+            List<EditorTrackSection> subsections, EditorTrackSection finalSection, 
+            List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment)
+        {
+            var assembly = new EditorPart(part.PartName, PartReplication.NoReplication());
+
+            if (part.Replication.BendPart)
+            {
+                foreach (var p in typicalSegment)
+                    foreach (var s in subsections)
+                    assembly.AddPolygon(TransposePoly(p, s.StartDirection));
+
+                if (finalSection is not null)
+                    foreach (var p in finalSegment)
+                        assembly.AddPolygon(TransposePoly(p, finalSection.StartDirection));
+            }
+            else
+            {
+                foreach (var p in typicalSegment)
+                    foreach (var s in subsections)
+                    {
+                        var rotatedDir = new Direction(s.StartDirection.X, s.StartDirection.Y, s.StartDirection.Z,
+                            0.5 * (s.StartDirection.A + s.EndDirection.A));
+                        assembly.AddPolygon(TransposePoly(p, rotatedDir));
+                    }
+
+                if (finalSection is not null)
+                    foreach (var p in finalSegment)
+                    {
+                        var rotatedDir = new Direction(finalSection.StartDirection.X, finalSection.StartDirection.Y, finalSection.StartDirection.Z,
+                                0.5 * (finalSection.StartDirection.A + finalSection.EndDirection.A));
+                        assembly.AddPolygon(TransposePoly(p, rotatedDir));
+                    }
+            }
+
+            return assembly;
         }
     }
 }

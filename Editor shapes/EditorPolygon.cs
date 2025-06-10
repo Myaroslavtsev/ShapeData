@@ -1,6 +1,9 @@
-﻿using System;
+﻿/// Data structure. Describes one polygon of an EditorPart. Should contain at least three vertices inside.
+
+using System;
 using System.Collections.Generic;
 using System.Numerics;
+using ShapeData.Geometry;
 
 namespace ShapeData
 {
@@ -80,7 +83,7 @@ namespace ShapeData
             if (Vertices.Count < 3)
                 return new Vector3();
 
-            Normal = Geometry.Geometry.MakePlaneFromFirstPoints(
+            Normal = Transfigurations.MakePlaneFromFirstPoints(
                 new List<Vector3> { Vertices[0].Position, Vertices[1].Position, Vertices[2].Position }).Normal;
 
             return Normal;

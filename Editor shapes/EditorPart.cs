@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿/// Data structure. Describes parts, stored into EditorLod class. Parts can be replicated by different ways. 
+/// Note that final .s file contains only polygons withous being partitioned by parts.
+
+using System.Collections.Generic;
 
 namespace ShapeData
 {
@@ -44,9 +47,9 @@ namespace ShapeData
                 return polygon;
         }
 
-        public EditorPart Copy(bool setFixedPosReplication)
+        public EditorPart Copy(bool clearReplicationParams)
         {
-            var copy = setFixedPosReplication ?
+            var copy = clearReplicationParams ?
                 new EditorPart(PartName, PartReplication.NoReplication(), Smoothed) :
                 new EditorPart(PartName, Replication, Smoothed);
 
@@ -58,6 +61,6 @@ namespace ShapeData
             return copy;
         }
 
-        public string IsSmoothed() => Smoothed ? "Smoothed" : "Unsmoothed";
+        //public string IsSmoothed() => Smoothed ? "Smoothed" : "Unsmoothed";
     }
 }

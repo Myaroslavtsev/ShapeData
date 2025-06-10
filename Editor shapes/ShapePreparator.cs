@@ -1,4 +1,6 @@
-﻿using System;
+﻿/// Prepares EditorShape instance to be saved to Kuju .s format
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,6 +46,7 @@ namespace ShapeData.Editor_shapes
         public ShapePreparator(EditorShape shape)
         {
             shape.OrderLods();
+            shape.DeleteUnvalidPolys();
 
             BoundingBox = GetBoundingBox(shape);
             Points = MakePointList(shape);

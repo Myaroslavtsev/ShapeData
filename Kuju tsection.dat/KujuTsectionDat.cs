@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿/// Data structure containing all data in Kuju tsection.dat file about track sections and track shapes.
+
+using System.Collections.Generic;
 
 namespace ShapeData
 {

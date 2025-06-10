@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿/// Converts EditorShape into string of .csv format with ; separator, which can be read by Excel.
+
+using System.Linq;
 using System.Text;
 
 namespace ShapeData

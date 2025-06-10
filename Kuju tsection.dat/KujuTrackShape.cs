@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿/// Data structure describing trajectories of multiple tracks modelled by a one .s file
+
+using System.Collections.Generic;
 
 namespace ShapeData
 {

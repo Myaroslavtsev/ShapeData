@@ -1,4 +1,6 @@
-﻿using System;
+﻿/// Data structure. Defines some classes to store different geometric data
+
+using System;
 using System.Numerics;
 
 namespace ShapeData.Geometry
@@ -20,7 +22,7 @@ namespace ShapeData.Geometry
         }
     }
 
-    public class Trajectory
+    public class Trajectory  : IComparable
     {
         public double Straight { get; set; }
         public double Radius { get; set; }
@@ -33,16 +35,47 @@ namespace ShapeData.Geometry
             Angle = angle;
         }
 
-        public double Length
+        public double Length => Math.Abs(Straight) + Math.Abs(Radius * Angle * Math.PI / 180);
+
+        public static bool operator >(Trajectory a, Trajectory b)
         {
-            get
-            {
-                if (Radius == 0)
-                    return Straight;
-                else
-                    return Radius * Angle * Math.PI / 180;
-            }
+            return a.Length > b.Length;
         }
+
+        public static bool operator <(Trajectory a, Trajectory b)
+        {
+            return a.Length < b.Length;
+        }
+
+        public int CompareTo(object obj)
+        {
+            return Length.CompareTo(obj);
+        }
+
+        public static Trajectory operator +(Trajectory a, Trajectory b)
+        {
+            if (a.Radius == b.Radius)
+                return new Trajectory(a.Straight + b.Straight, a.Radius, a.Angle + b.Angle);
+            else
+                return new Trajectory();
+        }
+
+        public static Trajectory operator -(Trajectory a, Trajectory b)
+        {
+            if (a.Radius == b.Radius)
+                return new Trajectory(a.Straight - b.Straight, a.Radius, a.Angle - b.Angle);
+            else
+                return new Trajectory();
+        }
+
+        public static Trajectory operator *(Trajectory a, double scale) =>
+            new(a.Straight * scale, a.Radius, a.Angle * scale);
+
+        public static Trajectory operator /(Trajectory a, double scale) =>
+            new(a.Straight / scale, a.Radius, a.Angle / scale);
+
+        public static Trajectory operator %(Trajectory a, double scale) =>
+            new(a.Straight % scale, a.Radius, a.Angle / scale);
     }
 
     public class PlaneVectors

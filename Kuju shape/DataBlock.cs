@@ -1,4 +1,7 @@
-﻿using System;
+﻿/// Data structure. A group of string parameters prepared to be written to Kuju data files. 
+/// Each DataBlock stands to one pair of parenthesys and can contain zero to many DataBlocks inside.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

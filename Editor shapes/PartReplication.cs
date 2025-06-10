@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿/// describes all part replication parameters for ShapeReplicator class
+
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ShapeData
@@ -55,6 +57,7 @@ namespace ShapeData
             ReplicationMethod = replicationMethod;
         }
 
+
         public PartReplication(PartReplicationMethod replicationMethod,
             PartScalingMethod scalingMethod,
             PartStretchInWidthMethod stretchInWidthMethod,
@@ -74,6 +77,8 @@ namespace ShapeData
                 ReplicationParams = new Dictionary<string, float>();
             else
                 ReplicationParams = replicationParams;
+
+            FillReplicationParams();
         }
 
         public static PartReplication NoReplication()
@@ -93,20 +98,43 @@ namespace ShapeData
             return count;
         }
 
+        public bool GetReplicationParam(string paramName, out float parameter)
+        {
+            if (!ReplicationParams.ContainsKey(paramName))
+            {
+                parameter = 0;
+                return false;
+            }
+
+            parameter = (float)ReplicationParams[paramName];
+            return true;
+        }
+
+        private void FillReplicationParams()
+        {
+            foreach (var paramName in GetReplicationParamNames())
+            {
+                if (!ReplicationParams.ContainsKey(paramName))
+                    ReplicationParams.Add(paramName, 0);
+            }
+        }
+
         private IEnumerable<string> GetReplicationParamNames()
         {
-            if (ReplicationMethod == PartReplicationMethod.ByEvenIntervals ||
+            if (ReplicationMethod == PartReplicationMethod.ByFixedIntervals ||
                 ReplicationMethod == PartReplicationMethod.ByEvenIntervals)
                 yield return "MinLength";
 
             if (ReplicationMethod == PartReplicationMethod.ByDeflection)
                 yield return "MaxDeflection";
 
-            if (ReplicationMethod == PartReplicationMethod.ByEvenIntervals ||
+            if (ReplicationMethod == PartReplicationMethod.ByFixedIntervals ||
                 ReplicationMethod == PartReplicationMethod.ByEvenIntervals ||
                 ReplicationMethod == PartReplicationMethod.ByDeflection)
+            {
                 yield return "OriginalLength";
-            //yield return "InitialShift";
+                yield return "InitialShift";
+            }
         }
     }
 }

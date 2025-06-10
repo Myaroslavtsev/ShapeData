@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿/// Data structure, a primary division of an EditorShape. Subsequently divided into paerts, polygons and certices.
+
+using System.Collections.Generic;
 
 namespace ShapeData
 {
