@@ -113,8 +113,8 @@ namespace ShapeData.Kuju_tsection.dat
 
                 if (!double.TryParse(values[1], NumberStyles.Any, cultureInfo, out double dX)) return;
                 if (!double.TryParse(values[2], NumberStyles.Any, cultureInfo, out double dY)) return;
-                if (!double.TryParse(values[2], NumberStyles.Any, cultureInfo, out double dZ)) return;
-                if (!double.TryParse(values[2], NumberStyles.Any, cultureInfo, out double dA)) return;
+                if (!double.TryParse(values[3], NumberStyles.Any, cultureInfo, out double dZ)) return;
+                if (!double.TryParse(values[4], NumberStyles.Any, cultureInfo, out double dA)) return;
 
                 for (int i = 5; i < values.Length; i++)
                 {

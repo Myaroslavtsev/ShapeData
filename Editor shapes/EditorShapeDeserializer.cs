@@ -103,15 +103,15 @@ namespace ShapeData
                 ParseReplicationParameters(line),
                 line[2].ToLower() == "smoothed");
 
-            if (line[3].ToLower() == "leave")
-                part.ReplicationParams.LeaveAtLeastOnePart = true;
+            //if (line[3].ToLower() == "leave")
+                //part.ReplicationParams.LeaveAtLeastOnePart = true;
 
             return part;
         }
 
-        private static IPartReplication ParseReplicationParameters(List<string> line)
+        private static PartReplication ParseReplicationParameters(List<string> line)
         {
-            switch (line[4].ToLower())
+            /*switch (line[4].ToLower())
             {
                 case "attheend":
                     return new ReplicationAtTheEnd();
@@ -145,9 +145,9 @@ namespace ShapeData
                         return new ReplicationAtFixedPos();
 
                     return new ReplicationStretchedByDeflection(originalLengthDeflection, maxDeflection);
-            }
+            }*/
 
-            return new ReplicationAtFixedPos();
+            return PartReplication.NoReplication();
         }
 
         private static EditorLod GetLodFromLine(List<string> line)

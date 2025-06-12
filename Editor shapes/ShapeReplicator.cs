@@ -51,8 +51,13 @@ namespace ShapeData.Editor_shapes
             {
                 var (subsections, finalSection) = SectionTransformer.SplitTrackSection(section, part.Replication);
 
-                var typicalSegment = PartTransformer.ScaleAndBendPart(part, subsections.First());                
-                var finalSegment = PartTransformer.TrimPart(part, finalSection);
+                var typicalSegment = new List<EditorPolygon>();
+                var finalSegment = new List<EditorPolygon>();
+
+                if (subsections is not null && subsections.Count > 0)
+                    typicalSegment = PartTransformer.ScaleAndBendPart(part, subsections.First());
+                if (finalSection is not null)
+                    finalSegment = PartTransformer.TrimPart(part, finalSection);
 
                 replicatedParts.Add(PartTransformer.AssemblePartSections(part, 
                     subsections, finalSection, typicalSegment, finalSegment));

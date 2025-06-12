@@ -40,13 +40,19 @@ namespace ShapeData
 
         private static void AddPartDataToSb(EditorPart part, StringBuilder sb)
         {
+            var smoothed = part.Smoothed ? "Smoothed" : "Unsmoothed";
+
             var dataString = ";;" + "Part" + ';' +
                 part.PartName + ';' +
-                part.IsSmoothed() + ';' +
-                part.LeaveAtLeastOne() + ';' +
-                part.ReplicationParams.ReplicationMethod;
+                smoothed + ';' +
+                part.Replication.ReplicationMethod;
+            //part.Replication.StretchInWidthMethod;
+            //part.Replication.ScalingMethod;
+            //part.Replication.BendPart;
+            //part.Replication.LeaveAtLeastOne;
+            //part.Replication.ScaleTexture;
 
-            foreach (var (Name, Value) in part.ReplicationParams.GetParams())
+            foreach (var (Name, Value) in part.Replication.GetReplicationParams())
             {
                 dataString += ';' + Name + ';' + Value.ToString("0.0000");
             }

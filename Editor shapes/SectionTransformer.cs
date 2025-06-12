@@ -37,7 +37,7 @@ namespace ShapeData.Editor_shapes
             List<EditorTrackSection> subsections = new();
             EditorTrackSection finalSection = null;
 
-            if (subsection.Traject.Straight == 0 || subsection.Traject.Angle == 0)
+            if (subsection.Traject.Straight == 0 && subsection.Traject.Angle == 0)
             {
                 if (replicationData.ScalingMethod == PartScalingMethod.FixLengthAndCut)
                     finalSection = fullSection;
@@ -65,6 +65,9 @@ namespace ShapeData.Editor_shapes
                 startDirection = newSubsection.EndDirection;
             }
 
+            if (subsections.Count == 0 && (replicationData.LeaveAtLeastOne || replicationData.ScalingMethod == PartScalingMethod.FixLengthAndCut))
+                subsections.Add(subsection); // too much added when A1t10mstrt splitted by 9.5 parts
+
             if (replicationData.ScalingMethod == PartScalingMethod.FixLengthAndCut)
                 finalSection = new EditorTrackSection(subsections.Last().EndDirection,
                     fullSection.Traject - subsection.Traject * subsections.Count);
@@ -85,7 +88,8 @@ namespace ShapeData.Editor_shapes
                     return section;
             }
 
-            if (replicationData.ReplicationMethod == PartReplicationMethod.ByEvenIntervals)
+            if (replicationData.ReplicationMethod == PartReplicationMethod.ByEvenIntervals ||
+                replicationData.ReplicationMethod == PartReplicationMethod.ByFixedIntervals)
             {
                 if (!replicationData.GetReplicationParam("MinLength", out splitParameter))
                     return section;
@@ -93,15 +97,15 @@ namespace ShapeData.Editor_shapes
 
             if (section.Traject.Radius == 0)
                 result = new EditorTrackSection(section.StartDirection,
-                    new Geometry.Trajectory(
+                    new Trajectory(
                         GetStraightInterval(section, splitParameter, replicationData.ReplicationMethod), 0, 0));
             else
                 result = new EditorTrackSection(section.StartDirection, 
-                    new Geometry.Trajectory(0, section.Traject.Radius, 
+                    new Trajectory(0, section.Traject.Radius, 
                         GetAngleInterval(section, splitParameter, replicationData.ReplicationMethod)));
 
-            if (replicationData.LeaveAtLeastOne && result.Traject.Angle == 0 && result.Traject.Length == 0)
-                return section;
+            //if (replicationData.LeaveAtLeastOne && result.Traject.Angle == 0 && result.Traject.Length == 0)
+            //    return section;
 
             return result;
         }
@@ -110,7 +114,7 @@ namespace ShapeData.Editor_shapes
         {
             return method switch
             {
-                PartReplicationMethod.AtFixedPos =>
+                PartReplicationMethod.ByFixedIntervals =>
                     StraightInterval(splitParameter, section.Traject.Straight, false),
                 PartReplicationMethod.ByEvenIntervals =>
                     StraightInterval(splitParameter, section.Traject.Straight, true),
@@ -124,7 +128,7 @@ namespace ShapeData.Editor_shapes
         {
             return method switch
             {
-                PartReplicationMethod.AtFixedPos => 
+                PartReplicationMethod.ByFixedIntervals => 
                     AngleInterval(splitParameter, section.Traject.Radius, section.Traject.Angle, false),
                 PartReplicationMethod.ByEvenIntervals => 
                     AngleInterval(splitParameter, section.Traject.Radius, section.Traject.Angle, true),
