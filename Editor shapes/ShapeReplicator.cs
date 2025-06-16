@@ -20,21 +20,26 @@ namespace ShapeData.Editor_shapes
             {
                 var newLod = newShape.AddLod(new EditorLod(oldLod.Distance));
 
-                foreach (var part in oldLod.Parts)
-                {
-                    var replicatedParts = ReplicatePart(part, GetSectionsFromShape(trackShape, tsectionDat));
-                    int counter = 0;
-
-                    foreach (var replica in replicatedParts)
-                        if (replica != null)
-                        {
-                            replica.PartName += '_' + counter;
-                            newLod.AddPart(replica);
-                            counter++;
-                        }
-                }
+                ReplicatePartsInLod(oldLod, newLod, trackShape, tsectionDat);
             }
             return newShape;
+        }
+
+        private static void ReplicatePartsInLod(EditorLod oldLod, EditorLod newLod, KujuTrackShape trackShape, KujuTsectionDat tsectionDat)
+        {
+            foreach (var part in oldLod.Parts)
+            {
+                var replicatedParts = ReplicatePart(part, GetSectionsFromShape(trackShape, tsectionDat));
+                int counter = 0;
+
+                foreach (var replica in replicatedParts)
+                    if (replica != null)
+                    {
+                        replica.PartName += '_' + counter;
+                        newLod.AddPart(replica);
+                        counter++;
+                    }
+            }
         }
 
         private static List<EditorPart> ReplicatePart(EditorPart part, List<EditorTrackSection> trackSections)
@@ -49,18 +54,11 @@ namespace ShapeData.Editor_shapes
             
             foreach (var section in trackSections)
             {
-                var (subsections, finalSection) = SectionTransformer.SplitTrackSection(section, part.Replication);
+                var newSections = SectionTransformer.SplitTrackSectionInSubsections(section, part.Replication);                
 
-                var typicalSegment = new List<EditorPolygon>();
-                var finalSegment = new List<EditorPolygon>();
+                var segments = PartTransformer.MakeTypicalAndFinalSegments(part, newSections);                
 
-                if (subsections is not null && subsections.Count > 0)
-                    typicalSegment = PartTransformer.ScaleAndBendPart(part, subsections.First());
-                if (finalSection is not null)
-                    finalSegment = PartTransformer.TrimPart(part, finalSection);
-
-                replicatedParts.Add(PartTransformer.AssemblePartSections(part, 
-                    subsections, finalSection, typicalSegment, finalSegment));
+                replicatedParts.Add(PartTransformer.AssemblePartSegments(part, newSections, segments));
             }
 
             return replicatedParts;

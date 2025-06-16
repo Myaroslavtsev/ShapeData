@@ -10,6 +10,63 @@ namespace ShapeData.Editor_shapes
 {
     class PartTransformer
     {
+        public static EditorPart AssemblePartSegments(EditorPart oldPart,
+            (List<EditorTrackSection> subsections, EditorTrackSection finalSection) newSections,
+            (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments)
+        {
+            var assembledPart = new EditorPart(oldPart.PartName, PartReplication.NoReplication());
+
+            double typicalRotation = 0;
+            double endRotation = 0;
+
+            if (oldPart.Replication.BendPart)
+            {
+                if (newSections.subsections is not null && newSections.subsections.Count > 0)
+                    typicalRotation = newSections.subsections[0].Traject.Angle / 2;
+                if (newSections.finalSection is not null)
+                    endRotation = newSections.finalSection.Traject.Angle / 2;
+            }
+
+            if (newSections.subsections is not null)
+                foreach (var section in newSections.subsections)
+                    AddPolysAtDirection(assembledPart, segments.typicalSegment, section, typicalRotation);
+
+            AddPolysAtDirection(assembledPart, segments.finalSegment, newSections.finalSection, endRotation);
+
+            return assembledPart;
+        }
+
+        public static void AddPolysAtDirection(
+            EditorPart part, 
+            List<EditorPolygon> segment, 
+            EditorTrackSection section, 
+            double additionalRotation)
+        {
+            if (segment is null || section is null)
+                return;
+
+            var newDirection = new Direction(section.StartDirection.X, section.StartDirection.Y, section.StartDirection.Z,
+                section.StartDirection.A + additionalRotation);
+
+            foreach (var poly in segment)                    
+                part.AddPolygon(TransposePoly(poly.Copy(), newDirection));
+        }
+
+        public static (List<EditorPolygon>, List<EditorPolygon>) MakeTypicalAndFinalSegments(
+            EditorPart part, 
+            (List<EditorTrackSection> subsections, EditorTrackSection finalSection) newSections)
+        {
+            (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments = 
+                (new List<EditorPolygon>(), new List<EditorPolygon>());
+
+            if (newSections.subsections is not null && newSections.subsections.Count > 0)
+                segments.typicalSegment = ScaleAndBendPart(part, newSections.subsections.First());
+            if (newSections.finalSection is not null)
+                segments.finalSegment = TrimPart(part, newSections.finalSection);
+
+            return segments;
+        }
+
         public static EditorPart TransposePart(EditorPart part, Direction direction)
         {
             foreach (var v in part.Vertices()) 
@@ -107,7 +164,7 @@ namespace ShapeData.Editor_shapes
             return part.Polygons;
         }
 
-        public static EditorPart AssemblePartSections(EditorPart part, 
+        public static EditorPart AssemblePartSecgments(EditorPart part, 
             List<EditorTrackSection> subsections, EditorTrackSection finalSection, 
             List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment)
         {

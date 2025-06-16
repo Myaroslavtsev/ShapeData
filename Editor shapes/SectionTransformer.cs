@@ -13,7 +13,7 @@ namespace ShapeData.Editor_shapes
     {
         const float accuracy = 1e-5f;
 
-        public static (List<EditorTrackSection>, EditorTrackSection) SplitTrackSection(EditorTrackSection section, PartReplication replicationData)
+        public static (List<EditorTrackSection>, EditorTrackSection) SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
         {
             return replicationData.ReplicationMethod switch
             {
