@@ -14,7 +14,10 @@ namespace ShapeData.Editor_shapes
             (List<EditorTrackSection> subsections, EditorTrackSection finalSection) newSections,
             (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments)
         {
-            var assembledPart = new EditorPart(oldPart.PartName, PartReplication.NoReplication());
+            var assembledPart = new EditorPart(oldPart.PartName, PartReplication.NoReplication())
+            {
+                Smoothed = oldPart.Smoothed
+            };
 
             double typicalRotation = 0;
             double endRotation = 0;
@@ -162,44 +165,6 @@ namespace ShapeData.Editor_shapes
             }
 
             return part.Polygons;
-        }
-
-        public static EditorPart AssemblePartSecgments(EditorPart part, 
-            List<EditorTrackSection> subsections, EditorTrackSection finalSection, 
-            List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment)
-        {
-            var assembly = new EditorPart(part.PartName, PartReplication.NoReplication());
-
-            if (part.Replication.BendPart)
-            {
-                foreach (var p in typicalSegment)
-                    foreach (var s in subsections)
-                    assembly.AddPolygon(TransposePoly(p, s.StartDirection));
-
-                if (finalSection is not null)
-                    foreach (var p in finalSegment)
-                        assembly.AddPolygon(TransposePoly(p, finalSection.StartDirection));
-            }
-            else
-            {
-                foreach (var p in typicalSegment)
-                    foreach (var s in subsections)
-                    {
-                        var rotatedDir = new Direction(s.StartDirection.X, s.StartDirection.Y, s.StartDirection.Z,
-                            0.5 * (s.StartDirection.A + s.EndDirection.A));
-                        assembly.AddPolygon(TransposePoly(p, rotatedDir));
-                    }
-
-                if (finalSection is not null)
-                    foreach (var p in finalSegment)
-                    {
-                        var rotatedDir = new Direction(finalSection.StartDirection.X, finalSection.StartDirection.Y, finalSection.StartDirection.Z,
-                                0.5 * (finalSection.StartDirection.A + finalSection.EndDirection.A));
-                        assembly.AddPolygon(TransposePoly(p, rotatedDir));
-                    }
-            }
-
-            return assembly;
         }
     }
 }

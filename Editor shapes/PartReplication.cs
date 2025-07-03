@@ -17,9 +17,8 @@ namespace ShapeData
 
     public enum PartScalingMethod
     {
-        FixLengthOnly,
-        FixLengthAndCut,
-        Scale
+        FixLength,
+        Stretch
     }
 
     public enum PartStretchInWidthMethod
@@ -123,7 +122,7 @@ namespace ShapeData
         {
             if (ReplicationMethod == PartReplicationMethod.ByFixedIntervals ||
                 ReplicationMethod == PartReplicationMethod.ByEvenIntervals)
-                yield return "MinLength";
+                yield return "IntervalLength";
 
             if (ReplicationMethod == PartReplicationMethod.ByDeflection)
                 yield return "MaxDeflection";
@@ -134,6 +133,7 @@ namespace ShapeData
             {
                 yield return "OriginalLength";
                 yield return "InitialShift";
+                yield return "SubdivisionCount";
             }
         }
     }

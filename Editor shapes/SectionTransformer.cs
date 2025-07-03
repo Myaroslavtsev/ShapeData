@@ -11,14 +11,12 @@ namespace ShapeData.Editor_shapes
 {
     class SectionTransformer
     {
-        const float accuracy = 1e-5f;
-
         public static (List<EditorTrackSection>, EditorTrackSection) SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
         {
             return replicationData.ReplicationMethod switch
             {
                 PartReplicationMethod.ByFixedIntervals or PartReplicationMethod.ByEvenIntervals or PartReplicationMethod.ByDeflection =>
-                    MakeSubsectionList(GetIntervalSubsection(section, replicationData), section, replicationData),
+                    MakeSubsectionList2(section, replicationData),
 
                 PartReplicationMethod.AtFixedPos => (new List<EditorTrackSection> { section }, null),
 
@@ -29,140 +27,134 @@ namespace ShapeData.Editor_shapes
             };
         }
 
-        private static (List<EditorTrackSection>, EditorTrackSection) MakeSubsectionList(
-            EditorTrackSection subsection, 
-            EditorTrackSection fullSection, 
+        private static (List<EditorTrackSection>, EditorTrackSection) MakeSubsectionList2(
+            EditorTrackSection section, 
             PartReplication replicationData)
-        {
-            List<EditorTrackSection> subsections = new();
-            EditorTrackSection finalSection = null;
-
-            if (subsection.Traject.Straight == 0 && subsection.Traject.Angle == 0)
-            {
-                if (replicationData.ScalingMethod == PartScalingMethod.FixLengthAndCut)
-                    finalSection = fullSection;
-
-                return (subsections, finalSection);
-            }
-
-            var initialTraject = subsection.Traject;
-            var startDirection = subsection.EndDirection;
-
-            if (replicationData.GetReplicationParam("InitialShift", out float initialShift))
-            {
-                initialTraject = subsection.Traject * (1 + initialShift / subsection.Traject.Length);
-
-                startDirection = Transfigurations.FindEndDirection(initialTraject, new Direction());
-                startDirection = Transfigurations.FindEndDirection(subsection.Traject * -1, startDirection);
-            }
-
-            for (var partialTrajectory = initialTraject;
-                partialTrajectory.Length < fullSection.Traject.Length - accuracy;
-                partialTrajectory += subsection.Traject)
-            {
-                var newSubsection = new EditorTrackSection(startDirection, subsection.Traject);
-                subsections.Add(newSubsection);
-                startDirection = newSubsection.EndDirection;
-            }
-
-            if (subsections.Count == 0 && (replicationData.LeaveAtLeastOne || replicationData.ScalingMethod == PartScalingMethod.FixLengthAndCut))
-                subsections.Add(subsection); // too much added when A1t10mstrt splitted by 9.5 parts
-
-            if (replicationData.ScalingMethod == PartScalingMethod.FixLengthAndCut)
-                finalSection = new EditorTrackSection(subsections.Last().EndDirection,
-                    fullSection.Traject - subsection.Traject * subsections.Count);
-
-            return (subsections, finalSection);
-        }
-
-        private static EditorTrackSection GetIntervalSubsection(EditorTrackSection section, PartReplication replicationData)
         {
             // valid only for Fixed, Even, Deflection replication methods
 
-            float splitParameter = 0;
-            EditorTrackSection result;
+            replicationData.GetReplicationParam("InitialShift", out var initialShift);
+            replicationData.GetReplicationParam("SubdivisionCount", out var subdivisionCount);
 
-            if (replicationData.ReplicationMethod == PartReplicationMethod.ByDeflection)
+            int subdivisionNum = (int)Math.Round(subdivisionCount);
+            if (subdivisionNum < 1)
+                subdivisionNum = 1;
+
+            var subIntervals = GetSubIntervalCountAndLength(section, replicationData);            
+
+            var mainTraject = ChangeTrajectLength(section.Traject, subIntervals.Length * subdivisionNum);
+            var lastTraject = ChangeTrajectLength(section.Traject, subIntervals.Length * (subIntervals.Count % subdivisionNum));
+
+            var startDirection = ShiftStartDirection(section.Traject, section.StartDirection, initialShift);
+
+            var mainSectionCount = subIntervals.Count / subdivisionNum; // integer division is floored automatically
+            var mainSections = GenerateSectionList(startDirection, mainTraject, mainSectionCount);
+
+            EditorTrackSection lastSection;
+            if (mainSectionCount > 0)
+                lastSection = new EditorTrackSection(mainSections.Last().EndDirection, lastTraject);
+            else
+                lastSection = new EditorTrackSection(startDirection, lastTraject);
+
+            return (mainSections, lastSection);
+        }
+
+        private static List<EditorTrackSection> GenerateSectionList(
+            Direction startDirection, Trajectory trajectory, int sectionCount)
+        {
+            var sections = new List<EditorTrackSection>();
+
+            for(int n = 0; n < sectionCount; n++)
             {
-                if (!replicationData.GetReplicationParam("MaxDeflection", out splitParameter))
-                    return section;
+                var newSection = new EditorTrackSection(startDirection, trajectory);
+                sections.Add(newSection);
+                startDirection = newSection.EndDirection;
             }
 
-            if (replicationData.ReplicationMethod == PartReplicationMethod.ByEvenIntervals ||
-                replicationData.ReplicationMethod == PartReplicationMethod.ByFixedIntervals)
+            return sections;
+        }
+
+        private static Direction ShiftStartDirection(Trajectory traject, Direction initDir, float shift)
+        {
+            if (traject.Radius == 0)
+                return new Direction(initDir.X, initDir.Y, initDir.Z + shift, initDir.A);
+
+            var angle = Transfigurations.Rad2Deg(shift / traject.Radius);
+
+            return Transfigurations.FindEndDirection(new Trajectory(0, traject.Radius, angle), initDir);
+        }
+
+        private static Trajectory ChangeTrajectLength(Trajectory originalTraject, double newLength)
+        {
+            if (originalTraject.Radius == 0)
+                return new Trajectory(newLength, 0, 0);
+
+            var angle = Transfigurations.Rad2Deg(newLength / originalTraject.Radius);
+
+            return new Trajectory(0, originalTraject.Radius, angle);
+        }
+
+        
+
+        private static (int Count, float Length) GetSubIntervalCountAndLength(EditorTrackSection section,
+            PartReplication replicationData)
+        {            
+            var sectionLength = section.Traject.Length;
+
+            replicationData.GetReplicationParam("SubdivisionCount", out var subdivisionCount);
+            int subdivisionNum = (int)Math.Round(subdivisionCount);
+            if (subdivisionNum < 1)
+                subdivisionNum = 1;
+
+            switch (replicationData.ReplicationMethod)
             {
-                if (!replicationData.GetReplicationParam("MinLength", out splitParameter))
-                    return section;
-            }            
+                case PartReplicationMethod.ByFixedIntervals:
+                    replicationData.GetReplicationParam("IntervalLength", out var interval);                    
+                    return CalculateSubintervals(interval / subdivisionCount, 
+                        (float)sectionLength, replicationData.LeaveAtLeastOne);
 
-            if (section.Traject.Radius == 0)
-                result = new EditorTrackSection(section.StartDirection,
-                    new Trajectory(
-                        GetStraightInterval(section, splitParameter, replicationData.ReplicationMethod), 0, 0));
-            else
-                result = new EditorTrackSection(section.StartDirection, 
-                    new Trajectory(0, section.Traject.Radius, 
-                        GetAngleInterval(section, splitParameter, replicationData.ReplicationMethod)));
+                case PartReplicationMethod.ByEvenIntervals:
+                    replicationData.GetReplicationParam("IntervalLength", out var intervalLength);
+                    return CalculateSubintervals(
+                        StretchInterval(intervalLength, sectionLength, subdivisionNum), 
+                        (float)sectionLength, replicationData.LeaveAtLeastOne);
 
-            //if (replicationData.LeaveAtLeastOne && result.Traject.Angle == 0 && result.Traject.Length == 0)
-            //    return section;
+                case PartReplicationMethod.ByDeflection:
+                    replicationData.GetReplicationParam("MaxDeflection", out var deflection);
+                    return CalculateSubintervals(
+                        StretchInterval(LengthByDeflection(section.Traject, deflection), sectionLength, subdivisionNum),
+                        (float)sectionLength, replicationData.LeaveAtLeastOne);
 
-            return result;
+                default:
+                    return (0, 0);
+            }
         }
 
-        private static double GetStraightInterval(EditorTrackSection section, float splitParameter, PartReplicationMethod method)
+        private static (int Count, float Length) CalculateSubintervals(float sectionLength, float intervalLength, bool leaveAtLeastOne)
         {
-            return method switch
-            {
-                PartReplicationMethod.ByFixedIntervals =>
-                    StraightInterval(splitParameter, section.Traject.Straight, false),
-                PartReplicationMethod.ByEvenIntervals =>
-                    StraightInterval(splitParameter, section.Traject.Straight, true),
-                PartReplicationMethod.ByDeflection =>
-                    section.Traject.Straight,
-                _ => 0,
-            };
+            int count = (int)Math.Floor(sectionLength / intervalLength);
+
+            if (leaveAtLeastOne && count == 0)
+                count = 1;
+
+            return (count, intervalLength);
         }
 
-        private static double GetAngleInterval(EditorTrackSection section, float splitParameter, PartReplicationMethod method)
+        private static float StretchInterval(double intervalLength, double sectionLength, int subdivisionCount)
         {
-            return method switch
-            {
-                PartReplicationMethod.ByFixedIntervals => 
-                    AngleInterval(splitParameter, section.Traject.Radius, section.Traject.Angle, false),
-                PartReplicationMethod.ByEvenIntervals => 
-                    AngleInterval(splitParameter, section.Traject.Radius, section.Traject.Angle, true),
-                PartReplicationMethod.ByDeflection => 
-                    AngleIntervalByDeflection(section.Traject.Radius, section.Traject.Angle, splitParameter),
-                _ => 0,
-            };
+            var desiredSunibtervalLength = intervalLength / subdivisionCount;
+            var subIntervalCount = Math.Round(sectionLength / desiredSunibtervalLength);
+            return (float)(sectionLength / subIntervalCount);
         }
 
-        private static double StraightInterval(double interval, double straight, bool arrangeEvenly)
+        private static double LengthByDeflection(Trajectory trajectory, float deflection)
         {
-            if (arrangeEvenly)
-                return straight / Math.Floor(straight / interval);
+            if (trajectory.Radius == 0)
+                return trajectory.Length;
 
-            return interval;
-        }
+            double angleInterval = 2 * Math.Acos(1 - deflection / trajectory.Radius) * 180 / Math.PI;
 
-        private static double AngleIntervalByDeflection(double radius, double angle, double deflection)
-        {
-            double angleInterval = 2 * Math.Acos(1 - deflection / radius) * 180 / Math.PI;
-
-            angleInterval = Math.Abs(angle) / Math.Floor(Math.Abs(angle / angleInterval));
-
-            return angleInterval * Math.Sign(angle);
-        }
-
-        private static double AngleInterval(double interval, double radius, double angle, bool arrangeEvenly)
-        {
-            double angleInterval = interval * 180 / Math.PI / radius;
-
-            if (arrangeEvenly)
-                angleInterval = Math.Abs(angle) / Math.Floor(Math.Abs(angle / angleInterval));
-
-            return angleInterval * Math.Sign(angle);
-        }        
+            return angleInterval * trajectory.Radius;
+        }      
     }
 }

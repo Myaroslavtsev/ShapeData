@@ -141,7 +141,7 @@ namespace ShapeData
             bool scaleTexture, bool bendPart, bool leaveOne,
             int replicaCount,
             float originalLength = 0,
-            float minLength = 0,
+            float IntervalLength = 0,
             float maxDeflection = 0)
         {
             var td = await GetTsectionDat();
@@ -151,7 +151,7 @@ namespace ShapeData
             var repParams = new Dictionary<string, float>
             {
                 { "OriginalLength", originalLength },
-                { "MinLength", minLength },
+                { "IntervalLength", IntervalLength },
                 { "MaxDeflection", maxDeflection }
             };
 
