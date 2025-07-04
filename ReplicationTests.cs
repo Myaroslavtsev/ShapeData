@@ -9,6 +9,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
 using System.IO;
+using System.Numerics;
+using System.Drawing;
+using System.Drawing.Imaging;
 //using NUnit.Framework.Legacy; // for NUnit 4.0 and newer
 
 namespace ShapeData
@@ -34,78 +37,72 @@ namespace ShapeData
 
         // no replication case
         [TestCase("A4t10mStrt.s", PartReplicationMethod.NoReplication,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 1)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 1, TestName = "No replication")]
 
         // cases for replication at fixed pos
         [TestCase("A1t10mStrt.s", PartReplicationMethod.AtFixedPos,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 1)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 1, TestName = "Fixed pos 1 track straight")]
         [TestCase("A4t10mStrt.s", PartReplicationMethod.AtFixedPos,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 4)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 4, TestName = "Fixed pos 4 track straight")]
         [TestCase("SR_1tStr_c_005_6m.s", PartReplicationMethod.AtFixedPos,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 1)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 1, TestName = "Fixed pos 1 track complex straight")]
         [TestCase("SR_2tCrv_c_00150r20d.s", PartReplicationMethod.AtFixedPos,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 2)]
-        [TestCase("SR_2tCrv_c_00150r20d.s", PartReplicationMethod.AtFixedPos,
-            PartScalingMethod.FixLengthAndCut, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 2)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 2, TestName = "Fixed pos 2 track complex curve")]
 
         // cases for replication at end pos
         [TestCase("A1t10mStrt.s", PartReplicationMethod.AtTheEnd,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 1)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 1, TestName = "End pos 1 track")]
         [TestCase("A4t10mStrt.s", PartReplicationMethod.AtTheEnd,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 4)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 4, TestName = "End pos 4 track")]
         [TestCase("SR_1tStr_c_005_6m.s", PartReplicationMethod.AtTheEnd,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 1)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 1, TestName = "End pos 1 track complex straight")]
         [TestCase("SR_2tCrv_c_00150r20d.s", PartReplicationMethod.AtTheEnd,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 2)]
-        [TestCase("SR_2tCrv_c_00150r20d.s", PartReplicationMethod.AtTheEnd,
-            PartScalingMethod.FixLengthAndCut, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            true, true, true, 2)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            true, true, true, 2, TestName = "End pos 2 track complex curve")]
 
         // cases for replication by fixed intervals
         [TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 0, 1.05f, 10.5f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 0, 1.05f, 10.5f, 0f, TestName = "FixedInt 1 track long part")]
         [TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 9, 1.05f, 1.05f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 9, 1.05f, 1.05f, 0f, TestName = "FixedInt 1 track short part")]
         [TestCase("A4t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 36, 1.05f, 1.05f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 36, 1.05f, 1.05f, 0f, TestName = "FixedInt 4 track")]
         [TestCase("A1t500r10d.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 87, 1.0f, 1.0f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 87, 1.0f, 1.0f, 0f, TestName = "FixedInt 1 track curve")]
 
         // leave at last one part option test
         [TestCase("A1t0_8mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 0, 1.05f, 1.05f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 0, 1.05f, 1.05f, 0f, TestName = "LeaveAtLeastOne False straight")]
         [TestCase("A1t0_8mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, true, 1, 1.05f, 1.05f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, true, 1, 1.05f, 1.05f, 0f, TestName = "LeaveAtLeastOne True straight")]
         [TestCase("A1t500r5d.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 0, 50f, 50f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 0, 50f, 50f, 0f, TestName = "LeaveAtLeastOne False curved")]
         [TestCase("A1t500r5d.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthOnly, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, true, 1, 50f, 50f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, true, 1, 50f, 50f, 0f, TestName = "LeaveAtLeastOne True curved")]
 
         // Fix length + trim
+        /*[TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 1, 1.05f, 10.5f, 0f, TestName = "End pos 1 track")]
         [TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthAndCut, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 1, 1.05f, 10.5f, 0f)]
-        [TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
-            PartScalingMethod.FixLengthAndCut, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 1.05f, 1.05f, 0f)]
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 1.05f, 1.05f, 0f, TestName = "End pos 1 track")]*/
 
         // cases for replication by even intervals
         /*
@@ -146,7 +143,7 @@ namespace ShapeData
         {
             var td = await GetTsectionDat();
 
-            var shape = new EditorShape("Simple shape");
+            var shape = new EditorShape(TestContext.CurrentContext.Test.Name);
 
             var repParams = new Dictionary<string, float>
             {
@@ -170,6 +167,8 @@ namespace ShapeData
             int ActualreplicasCount = 0;
             foreach (var rPart in replica.Parts())
                 ActualreplicasCount += rPart.Polygons.Count;
+
+            DrawShape(replica, TestContext.CurrentContext.Test.Name, 25);
 
             Assert.AreEqual(replicaCount, ActualreplicasCount);
         }
@@ -227,6 +226,108 @@ namespace ShapeData
             var lastPartPoly = replica.Lods[0].Parts.Last().Polygons[0];
             Assert.AreEqual(X, lastPartPoly.Vertices[2].Position.X, 1e-5f);
             Assert.AreEqual(Z, lastPartPoly.Vertices[2].Position.Z, 1e-5f);
+        }
+
+        private static void DrawShape(EditorShape shape, string name, int pixelsPerMeter)
+        {
+            var bb = GetBoundingRect(shape);
+
+            var width = (int)((5 + bb.Item2.X - bb.Item1.X) * pixelsPerMeter);
+            var height = (int)((5 + bb.Item2.Y - bb.Item1.Y) * pixelsPerMeter);
+
+            var originX = (int)((2.5 - bb.Item1.X) * pixelsPerMeter);
+            var originY = (int)((2.5 - bb.Item1.Y) * pixelsPerMeter);
+
+            if (bb.Item2.X < bb.Item1.X || bb.Item2.Y < bb.Item1.Y)
+            {
+                width = 5 * pixelsPerMeter;
+                height = 5 * pixelsPerMeter;
+                originX = (int)(2.5 * pixelsPerMeter);
+                originY = (int)(2.5 * pixelsPerMeter);
+            }
+
+            using var bmp = new Bitmap(width, height);
+            using var graphics = Graphics.FromImage(bmp);
+
+            // prepare cancas
+            graphics.Clear(Color.White);
+
+            // draw shape
+            using var redPen = new Pen(Color.Red, 1.5f);
+            foreach (var poly in shape.Polygons())
+            {
+                for (int n = 1; n < poly.Vertices.Count; n++)
+                {
+                    var start = new PointF(originX + poly.Vertices[n].Position.X * pixelsPerMeter,
+                        originY + poly.Vertices[n].Position.Z * pixelsPerMeter);
+                    var end = new PointF(originX + poly.Vertices[n - 1].Position.X * pixelsPerMeter,
+                        originY + poly.Vertices[n - 1].Position.Z * pixelsPerMeter);
+                    graphics.DrawLine(redPen, start, end);
+                }
+
+                var start2 = new PointF(originX + poly.Vertices[0].Position.X * pixelsPerMeter,
+                        originY + poly.Vertices[0].Position.Z * pixelsPerMeter);
+                var end2 = new PointF(originX + poly.Vertices[^1].Position.X * pixelsPerMeter,
+                        originY + poly.Vertices[^1].Position.Z * pixelsPerMeter);
+                graphics.DrawLine(redPen, start2, end2);
+            }
+
+            // write comments
+            var font = new Font("Arial", 12);
+            var brush = new SolidBrush(Color.Black);
+
+            graphics.DrawString(name, font, brush, 5, 5);
+            graphics.DrawString(shape.ShapeName, font, brush, 5, 20);
+            graphics.DrawString("Parts: " + shape.Parts().Count().ToString(), font, brush, 5, 35);
+            graphics.DrawString("Polygons: " + shape.Polygons().Count().ToString(), font, brush, 5, 50);
+
+            // replication params printing is senseless as they're erased during replication
+
+            /*var i = 50;
+            foreach(var part in shape.Parts())
+            {
+                var r = part.Replication;
+
+                graphics.DrawString(r.ReplicationMethod.ToString(), font, brush, 5, i);
+                graphics.DrawString(r.ScalingMethod.ToString(), font, brush, 5, i + 15);
+                graphics.DrawString(r.StretchInWidthMethod.ToString(), font, brush, 5, i + 30);
+                graphics.DrawString(r.LeaveAtLeastOne ? "LeaveAtLeastOne" : "Not leaveAtLeastOne", font, brush, 5, i + 45);
+                graphics.DrawString(r.ScaleTexture ? "ScaleTexture" : "Not scaleTexture", font, brush, 5, i + 60);
+                graphics.DrawString(r.BendPart ? "BendPart" : "Not bendPart", font, brush, 5, i + 75);
+
+                var s = "";
+                if (r.ReplicationParams is not null)
+                {
+                    foreach (var param in r.ReplicationParams)
+                        s += param.Key + ": " + param.Value.ToString() + "; ";
+                    graphics.DrawString(s, font, brush, 5, i + 90);
+                }
+                else
+                    graphics.DrawString("no replication params", font, brush, 5, i + 90);
+
+                i += 105;
+            }*/
+
+            Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\Tests\\");
+            bmp.Save(Directory.GetCurrentDirectory() + "\\Tests\\" + name + ".png", ImageFormat.Png);
+        }
+
+        private static (Vector2, Vector2) GetBoundingRect(EditorShape shape)
+        {
+            var minX = float.MaxValue;
+            var minZ = float.MaxValue;
+            var maxX = float.MinValue;
+            var maxZ = float.MinValue;
+
+            foreach (var vertex in shape.Vertices())
+            {
+                if (vertex.Position.X > maxX) maxX = vertex.Position.X;
+                if (vertex.Position.X < minX) minX = vertex.Position.X;
+                if (vertex.Position.Z > maxZ) maxZ = vertex.Position.Z;
+                if (vertex.Position.Z < minZ) minZ = vertex.Position.Z;
+            }
+
+            return (new Vector2(minX, minZ), new Vector2(maxX, maxZ));
         }
     }
 }

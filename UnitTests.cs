@@ -50,7 +50,7 @@ namespace ShapeData
                 "ReplicatedPart",
                 new PartReplication(
                     PartReplicationMethod.AtFixedPos, 
-                    PartScalingMethod.FixLengthOnly, 
+                    PartScalingMethod.FixLength, 
                     PartStretchInWidthMethod.ReplicateAlongAllTracks, 
                     false, false, true),
                 false));
