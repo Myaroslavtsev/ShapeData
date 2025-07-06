@@ -116,8 +116,8 @@ namespace ShapeData
 
         // for Okrasa Ghia's tsection.dat build 00038
         // without 32 shapes having duplicated file names
-        //[TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")]
-        //[TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")]
+        [TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")]
+        [TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")]
         public async Task LoadTsectionDat(string tsectionPath, bool skipRoadShapes, int trackSectionCount, int trackShapeCount)
         {
             var td = await KujuTsectionParser.LoadTsection(tsectionPath, skipRoadShapes);

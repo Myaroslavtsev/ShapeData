@@ -18,6 +18,7 @@ namespace ShapeData
     public enum PartScalingMethod
     {
         FixLength,
+        FixLengthAndTrim,
         Stretch
     }
 
@@ -56,7 +57,6 @@ namespace ShapeData
             ReplicationMethod = replicationMethod;
         }
 
-
         public PartReplication(PartReplicationMethod replicationMethod,
             PartScalingMethod scalingMethod,
             PartStretchInWidthMethod stretchInWidthMethod,
@@ -88,13 +88,6 @@ namespace ShapeData
         public void SetReplicationParams(Dictionary<string, float> replicationParams)
         {
             ReplicationParams = replicationParams;
-        }
-
-        public int ReplicationParamCount()
-        {
-            int count = 0;
-            _ = GetReplicationParamNames().Select(rpn => count++);
-            return count;
         }
 
         public bool GetReplicationParam(string paramName, out float parameter)

@@ -10,6 +10,8 @@ namespace ShapeData.Editor_shapes
 {
     class PartTransformer
     {
+        const float Accuracy = 1e-4f;
+
         public static EditorPart AssemblePartSegments(EditorPart oldPart,
             (List<EditorTrackSection> subsections, EditorTrackSection finalSection) newSections,
             (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments)
@@ -22,7 +24,7 @@ namespace ShapeData.Editor_shapes
             double typicalRotation = 0;
             double endRotation = 0;
 
-            if (oldPart.Replication.BendPart)
+            if (!oldPart.Replication.BendPart)
             {
                 if (newSections.subsections is not null && newSections.subsections.Count > 0)
                     typicalRotation = newSections.subsections[0].Traject.Angle / 2;
@@ -39,7 +41,7 @@ namespace ShapeData.Editor_shapes
             return assembledPart;
         }
 
-        public static void AddPolysAtDirection(
+        private static void AddPolysAtDirection(
             EditorPart part, 
             List<EditorPolygon> segment, 
             EditorTrackSection section, 
@@ -67,9 +69,9 @@ namespace ShapeData.Editor_shapes
                 (new List<EditorPolygon>(), new List<EditorPolygon>());
 
             if (newSections.subsections is not null && newSections.subsections.Count > 0)
-                segments.typicalSegment = ScaleAndBendPart(part, newSections.subsections.First());
+                segments.typicalSegment = ScaleAndBendPart(part.Copy(false), newSections.subsections.First());
             if (newSections.finalSection is not null)
-                segments.finalSegment = TrimPart(part, newSections.finalSection);
+                segments.finalSegment = TrimPart(part.Copy(false), newSections.finalSection);
 
             return segments;
         }
@@ -149,16 +151,21 @@ namespace ShapeData.Editor_shapes
 
             var maxZ = finalSection.Traject.Length;
 
+            var newPolygons = new List<EditorPolygon>();
+
             for (int i = 0; i < part.Polygons.Count; i++)
             {
-                var pointsToTrim = part.Polygons[i].Vertices.Select(v => v.Position.Z).Count(z => z > maxZ);
+                var pointsToTrim = part.Polygons[i].Vertices.Select(v => v.Position.Z).Count(z => z + Accuracy > maxZ);
 
                 if (pointsToTrim == 0)
+                {
+                    newPolygons.Add(part.Polygons[i]);
                     continue;
-
+                }
+                    
                 if (pointsToTrim == part.Polygons[i].Vertices.Count)
                 {
-                    part.Polygons.RemoveAt(i);
+                    //part.Polygons.RemoveAt(i);
                     continue;
                 }    
 
@@ -168,12 +175,14 @@ namespace ShapeData.Editor_shapes
                     {
                         if (!part.Replication.ScaleTexture) 
                             v.UvPosition = new Vector2(v.UvPosition.X, (float)(v.UvPosition.Y * v.Position.Z / maxZ));
-                        v.Position = new Vector3(v.Position.X, v.Position.Z, (float)maxZ);
+                        v.Position = new Vector3(v.Position.X, v.Position.Y, (float)maxZ);
                     }
                 }
+
+                newPolygons.Add(part.Polygons[i]);
             }
 
-            return part.Polygons;
+            return newPolygons;
         }
     }
 }
