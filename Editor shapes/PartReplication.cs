@@ -130,11 +130,12 @@ namespace ShapeData
             if (ReplicationMethod == PartReplicationMethod.ByFixedIntervals ||
                 ReplicationMethod == PartReplicationMethod.ByEvenIntervals ||
                 ReplicationMethod == PartReplicationMethod.ByDeflection)
-            {
-                yield return "OriginalLength";
+            {                
                 yield return "InitialShift";
                 yield return "SubdivisionCount";
             }
+
+            yield return "OriginalLength"; // mandatory param
         }
     }
 }

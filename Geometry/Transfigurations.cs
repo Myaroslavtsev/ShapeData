@@ -17,28 +17,29 @@ namespace ShapeData.Geometry
             double startAngle = Deg2Rad(startDirection.A);
 
             // 1. Координаты конца прямого отрезка
-            double straightEndX = startDirection.X - trajectory.Straight * Math.Sin(startAngle);
+            double straightEndX = startDirection.X + trajectory.Straight * Math.Sin(startAngle); // -
             double straightEndZ = startDirection.Z + trajectory.Straight * Math.Cos(startAngle);
 
             // 2. Направление к центру дуги (вектор нормали)
-            double curveSide = (trajectory.Angle > 0) ? -1 : 1; // Влево (CCW) или вправо (CW)
+            double curveSide = (trajectory.Angle > 0) ? 1 : -1; // Влево (CCW) или вправо (CW)
             double normal_angle_rad = startAngle + curveSide * Math.PI / 2.0;
 
             // 3. Центр дуги
             double curveCenterX = straightEndX + trajectory.Radius * Math.Sin(normal_angle_rad);
-            double curveCenterZ = straightEndZ - trajectory.Radius * Math.Cos(normal_angle_rad);
+            double curveCenterZ = straightEndZ + trajectory.Radius * Math.Cos(normal_angle_rad);
 
             // 4. Угол между началом дуги и концом дуги
             double curveAngle = Deg2Rad(trajectory.Angle);
 
             // 5. Начальный угол дуги относительно центра
             double curveStartAngle = Math.Atan2(straightEndZ - curveCenterZ, straightEndX - curveCenterX);
+            // isn't it equal to startAngle?
 
             // 6. Конечный угол дуги
-            double curveEndAngle = curveStartAngle + curveAngle;
+            double curveEndAngle = curveStartAngle - curveAngle; // +
 
             // 7. Конечная точка дуги
-            double Xend = curveCenterX + trajectory.Radius * Math.Cos(curveEndAngle);
+            double Xend = curveCenterX + trajectory.Radius * Math.Cos(curveEndAngle); // +
             double Zend = curveCenterZ + trajectory.Radius * Math.Sin(curveEndAngle);
 
             // 8. Конечный угол касательной
@@ -52,11 +53,17 @@ namespace ShapeData.Geometry
 
         public static Vector3 TransposePoint(Vector3 point, Direction direction)
         {
-            var rotAngle = -Deg2Rad(direction.A);
+            double angle = -Deg2Rad(direction.A); // clockwise
 
-            var newX = direction.X + point.X * Math.Cos(rotAngle) - point.Z * Math.Sin(rotAngle);
-            var newY = direction.Y + point.Y;
-            var newZ = direction.Z + point.X * Math.Sin(rotAngle) + point.Z * Math.Cos(rotAngle);
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+
+            double rotatedX = point.X * cos - point.Z * sin;
+            double rotatedZ = point.X * sin + point.Z * cos;
+
+            double newX = direction.X + rotatedX;
+            double newY = direction.Y + point.Y;
+            double newZ = direction.Z + rotatedZ;
 
             return new Vector3((float)newX, (float)newY, (float)newZ);
         }

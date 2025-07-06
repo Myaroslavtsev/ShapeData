@@ -80,7 +80,13 @@ namespace ShapeData
             false, false, false, 36, 1.05f, 1.05f, 0f, TestName = "FixedInt 4 track")]
         [TestCase("A1t500r10d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 87, 1.0f, 1.0f, 0f, TestName = "FixedInt 1 track curve")]
+            false, false, false, 8, 10.0f, 10.0f, 0f, TestName = "FixedInt 1 track curve")]
+        [TestCase("A2t500r10d.s", PartReplicationMethod.ByFixedIntervals,
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 173, 1.0f, 1.0f, 0f, TestName = "FixedInt 2 track curve")]
+        [TestCase("SR_2tCrv_c_00150r20d.s", PartReplicationMethod.ByFixedIntervals,
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 104, 1.0f, 1.0f, 0f, TestName = "FixedInt 2 track complex curve")]
 
         // leave at last one part option test
         [TestCase("A1t0_8mStrt.s", PartReplicationMethod.ByFixedIntervals,
@@ -137,7 +143,7 @@ namespace ShapeData
             PartStretchInWidthMethod stretchMethod,
             bool scaleTexture, bool bendPart, bool leaveOne,
             int replicaCount,
-            float originalLength = 0,
+            float originalLength = 1,
             float IntervalLength = 0,
             float maxDeflection = 0)
         {
@@ -157,9 +163,13 @@ namespace ShapeData
 
             part.AddPolygon(new EditorPolygon(
                 new List<EditorVertex> {
-                    new EditorVertex(-1.2f, 0, 0, 0, 0),
+                    /*new EditorVertex(-1.2f, 0, 0, 0, 0),
                     new EditorVertex(1.2f, 0, 0, 1, 0),
-                    new EditorVertex(0, 1.7f, 0, 0.5f, 1)
+                    new EditorVertex(0, 1.7f, 0, 0.5f, 1)*/
+                    new EditorVertex(-1.2f, 0, 0, 0, 0),
+                    new EditorVertex(-1.2f, 0, 1.0f, 0, 1),
+                    new EditorVertex(+1.2f, 0, 1.0f, 1, 1),
+                    new EditorVertex(+1.2f, 0, 0, 1, 0)
                 }));
 
             var replica = await ShapeReplicator.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
@@ -236,7 +246,7 @@ namespace ShapeData
             var height = (int)((5 + bb.Item2.Y - bb.Item1.Y) * pixelsPerMeter);
 
             var originX = (int)((2.5 - bb.Item1.X) * pixelsPerMeter);
-            var originY = (int)((2.5 - bb.Item1.Y) * pixelsPerMeter);
+            var originY = height - (int)((2.5 + bb.Item1.Y) * pixelsPerMeter);
 
             if (bb.Item2.X < bb.Item1.X || bb.Item2.Y < bb.Item1.Y)
             {
@@ -252,6 +262,12 @@ namespace ShapeData
             // prepare cancas
             graphics.Clear(Color.White);
 
+            // draw coordinate senter
+            using var navyPen = new Pen(Color.Navy, 1.5f);
+            graphics.DrawEllipse(navyPen, originX - pixelsPerMeter, originY - pixelsPerMeter, 
+                2 * pixelsPerMeter, 2 * pixelsPerMeter);
+            graphics.DrawLine(navyPen, originX, originY, originX, originY - pixelsPerMeter);
+
             // draw shape
             using var redPen = new Pen(Color.Red, 1.5f);
             foreach (var poly in shape.Polygons())
@@ -259,21 +275,21 @@ namespace ShapeData
                 for (int n = 1; n < poly.Vertices.Count; n++)
                 {
                     var start = new PointF(originX + poly.Vertices[n].Position.X * pixelsPerMeter,
-                        originY + poly.Vertices[n].Position.Z * pixelsPerMeter);
+                        originY - poly.Vertices[n].Position.Z * pixelsPerMeter);
                     var end = new PointF(originX + poly.Vertices[n - 1].Position.X * pixelsPerMeter,
-                        originY + poly.Vertices[n - 1].Position.Z * pixelsPerMeter);
+                        originY - poly.Vertices[n - 1].Position.Z * pixelsPerMeter);
                     graphics.DrawLine(redPen, start, end);
                 }
 
                 var start2 = new PointF(originX + poly.Vertices[0].Position.X * pixelsPerMeter,
-                        originY + poly.Vertices[0].Position.Z * pixelsPerMeter);
+                        originY - poly.Vertices[0].Position.Z * pixelsPerMeter);
                 var end2 = new PointF(originX + poly.Vertices[^1].Position.X * pixelsPerMeter,
-                        originY + poly.Vertices[^1].Position.Z * pixelsPerMeter);
+                        originY - poly.Vertices[^1].Position.Z * pixelsPerMeter);
                 graphics.DrawLine(redPen, start2, end2);
             }
 
             // write comments
-            var font = new Font("Arial", 12);
+            var font = new Font("Arial", 10);
             var brush = new SolidBrush(Color.Black);
 
             graphics.DrawString(name, font, brush, 5, 5);
@@ -326,6 +342,11 @@ namespace ShapeData
                 if (vertex.Position.Z > maxZ) maxZ = vertex.Position.Z;
                 if (vertex.Position.Z < minZ) minZ = vertex.Position.Z;
             }
+
+            if (maxX < 0) maxX = 0;
+            if (minX > 0) minX = 0;
+            if (maxZ < 0) maxZ = 0;
+            if (minZ > 0) minZ = 0;
 
             return (new Vector2(minX, minZ), new Vector2(maxX, maxZ));
         }

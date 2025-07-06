@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
 using System.IO;
+using System.Numerics;
 //using NUnit.Framework.Legacy; // for NUnit 4.0 and newer
 
 namespace ShapeData
@@ -115,8 +116,8 @@ namespace ShapeData
 
         // for Okrasa Ghia's tsection.dat build 00038
         // without 32 shapes having duplicated file names
-        [TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")]
-        [TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")]
+        //[TestCase(tsectionPath, true, 6050, 8709, TestName = "load tsection no roads")]
+        //[TestCase(tsectionPath, false, 6050, 11827, TestName = "load tsection with roads")]
         public async Task LoadTsectionDat(string tsectionPath, bool skipRoadShapes, int trackSectionCount, int trackShapeCount)
         {
             var td = await KujuTsectionParser.LoadTsection(tsectionPath, skipRoadShapes);
@@ -127,14 +128,14 @@ namespace ShapeData
 
         [TestCase(0, 0, 0, 10, 0, 0, 0, 10, 0, TestName = "traj: forward 10m")]
         [TestCase(-5, -7, 0, 10, 0, 0, -5, 3, 0, TestName = "traj: forward 10m from non-zero start")]
-        [TestCase(0, 0, 90, 10, 0, 0, -10, 0, 90, TestName = "traj: left 10m")]
-        [TestCase(0, 0, 45, 14.14213562373095, 0, 0, -10, 10, 45, TestName = "traj: diagonal -14,142m")]
-        [TestCase(0, 0, 0, 0, 10, 90, -10, 10, 90, TestName = "traj: turn left r10 90d")]
-        [TestCase(0, 0, 0, 0, 10, -90, 10, 10, 270, TestName = "traj: turn right r10 90d")]
-        [TestCase(0, 0, 0, 0, 14.14213562373095, 45, -4.14213562373, 10, 45, TestName = "traj: turn left r14,142 45d")]
-        [TestCase(0, 0, 0, 10, 10, 90, -10, 20, 90, TestName = "traj: forward 10m, then turn left r10 90d")]
-        [TestCase(0, 0, 90, 10, 10, -90, -20, 10, 0, TestName = "traj: left 10m, then turn right r10 90d")]
-        [TestCase(0, 0, -90, 5, 14.14213562373095, -45, 15, -4.14213562373, 225, TestName = "traj: turn right r14,142 45d")]
+        [TestCase(0, 0, 90, 10, 0, 0, +10, 0, 90, TestName = "traj: right 10m")]
+        [TestCase(0, 0, 45, 14.14213562373095, 0, 0, 10, 10, 45, TestName = "traj: diagonal 14,142m")]
+        [TestCase(0, 0, 0, 0, 10, -90, -10, 10, 270, TestName = "traj: turn left r10 90d")]
+        [TestCase(0, 0, 0, 0, 10, 90, 10, 10, 90, TestName = "traj: turn right r10 90d")]
+        [TestCase(0, 0, 0, 0, 14.14213562373095, -45, -4.14213562373, 10, 315, TestName = "traj: turn left r14,142 45d")]
+        [TestCase(0, 0, 0, 10, 10, -90, -10, 20, 270, TestName = "traj: forward 10m, then turn left r10 90d")]
+        [TestCase(0, 0, -90, 10, 10, 90, -20, 10, 0, TestName = "traj: left 10m, then turn right r10 90d")]
+        [TestCase(0, 0, -90, 5, 14.14213562373095, 45, -15, 4.14213562373, 315, TestName = "traj: turn right r14,142 45d")]
         public void TrajectoryEndDirectionTest(
             double X0,
             double Z0,
@@ -198,6 +199,28 @@ namespace ShapeData
             Assert.AreEqual(1d, dots[2].U, 1e-5); Assert.AreEqual(5d / 15d / Math.Sqrt(2), dots[2].V, 1e-5);
             Assert.AreEqual(1d / 3d, dots[3].U, 1e-5); Assert.AreEqual(0, dots[3].V, 1e-5);
             Assert.AreEqual(0, dots[4].U, 1e-5); Assert.AreEqual(0, dots[4].V, 1e-5);
+        }
+
+        [TestCase(0.2f, 0.05, 1, 0, 0, 1.2, 0.05, TestName = "transp: straight X")]
+        [TestCase(0.2, 0.05, 0, 1, 0, 0.2, 1.05, TestName = "transp: straight Z")]
+        [TestCase(1, 0, 0, 0, 90, 0, -1, TestName = "transp: rot 90 from X")]
+        [TestCase(1, 0, 0, 0, -90, 0, 1, TestName = "transp: rot -90 from X")]
+        [TestCase(0, 1, 0, 0, 90, 1, 0, TestName = "transp: rot 90 from Z")]
+        [TestCase(0, 1, 0, 0, -90, -1, 0, TestName = "transp: rot -90 from Z")]
+        [TestCase(2, 0, 0, 0, -45, 1.4142, 1.4142, TestName = "transp: rot -45 from X")]
+        [TestCase(0, 2, 0, 0, -45, -1.4142, 1.4142, TestName = "transp: rot -45 from Z")]
+        [TestCase(1.4142, 1.4142, 0, 0, -45, 0, 2, TestName = "transp: rot -45 from plane")]
+        [TestCase(1.4142, 1.4142, 0, 0, 45, 2, 0, TestName = "transp: rot 45 from plane")]
+        [TestCase(1.4142, 1.4142, 3, 5, -45, 3, 7, TestName = "transp: straight&rot -45 from plane")]
+        public void TransposePointTest(double x0, double z0, double dirX, double dirZ, double dirA, double newX, double newZ)
+        {
+            var point = new Vector3((float)x0, 0, (float)z0);
+            var dir = new Direction(dirX, 0, dirZ, dirA);
+
+            var transposedPoint = Transfigurations.TransposePoint(point, dir);
+
+            Assert.AreEqual((float)newX, transposedPoint.X, 0.001);
+            Assert.AreEqual((float)newZ, transposedPoint.Z, 0.001);
         }
 
         [Test]

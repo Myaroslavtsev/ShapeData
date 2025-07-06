@@ -49,6 +49,8 @@ namespace ShapeData.Editor_shapes
 
             var replicatedParts = new List<EditorPart>();
 
+            CheckPartReplicationParams(part);
+
             if (part.Replication.StretchInWidthMethod != PartStretchInWidthMethod.ReplicateAlongAllTracks)
                 throw new NotImplementedException(); // ReplicateStretchedPart(part, trackSections);
             
@@ -62,6 +64,12 @@ namespace ShapeData.Editor_shapes
             }
 
             return replicatedParts;
+        }
+
+        private static void CheckPartReplicationParams(EditorPart part)
+        {
+            if (part.Replication.ReplicationParams["OriginalLength"] == 0)
+                part.Replication.ReplicationParams["OriginalLength"] = 1;
         }
 
         private static List<EditorTrackSection> GetSectionsFromShape(KujuTrackShape trackShape, KujuTsectionDat tsectionDat)

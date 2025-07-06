@@ -51,8 +51,12 @@ namespace ShapeData.Editor_shapes
             var newDirection = new Direction(section.StartDirection.X, section.StartDirection.Y, section.StartDirection.Z,
                 section.StartDirection.A + additionalRotation);
 
-            foreach (var poly in segment)                    
-                part.AddPolygon(TransposePoly(poly.Copy(), newDirection));
+            foreach (var poly in segment)
+            {
+                var newPoly = poly.Copy();
+                part.AddPolygon(TransposePoly(newPoly, newDirection));
+            }
+                
         }
 
         public static (List<EditorPolygon>, List<EditorPolygon>) MakeTypicalAndFinalSegments(
@@ -91,8 +95,13 @@ namespace ShapeData.Editor_shapes
             float scaleFactor = 1;
 
             if (part.Replication.GetReplicationParam("OriginalLength", out var originalLength))
-                scaleFactor = (float)subsection.Traject.Length / originalLength;
-
+            {
+                if (originalLength != 0)
+                    scaleFactor = (float)subsection.Traject.Length / originalLength;
+                else
+                    scaleFactor = 1;
+            }
+                
             if (part.Replication.BendPart)
                 return ScaleAndBendPolys(part.Polygons, scaleFactor, subsection.Traject);
             else
