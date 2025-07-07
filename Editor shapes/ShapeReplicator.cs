@@ -68,8 +68,10 @@ namespace ShapeData.Editor_shapes
 
         private static void CheckPartReplicationParams(EditorPart part)
         {
-            if (part.Replication.ReplicationParams["OriginalLength"] == 0)
-                part.Replication.ReplicationParams["OriginalLength"] = 1;
+            part.Replication.GetReplicationParam("OriginalLength", out var originalLength);
+
+            if (originalLength == 0)
+                part.Replication.SetReplicationParam("OriginalLength", 1);
         }
 
         private static List<EditorTrackSection> GetSectionsFromShape(KujuTrackShape trackShape, KujuTsectionDat tsectionDat)

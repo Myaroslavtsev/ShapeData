@@ -88,13 +88,6 @@ namespace ShapeData.Editor_shapes
                     break;
 
                 case PartScalingMethod.Stretch:
-                    /*double scaleFactor = 1;
-                    if (mainSection is not null)
-                    {
-                        part.Replication.GetReplicationParam("OriginalLength", out var originalLength);
-                        scaleFactor = mainSection.Traject.Length / originalLength;
-                    }*/
-
                     segments.typicalSegment = StretchPolys(part.Polygons, newSections.scaleFactor);
                     segments.finalSegment = TrimPolys(StretchPolys(part.Polygons, newSections.scaleFactor), 
                         newSections.finalSection, part.Replication.ScaleTexture);

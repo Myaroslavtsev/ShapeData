@@ -101,53 +101,42 @@ namespace ShapeData
         {
             var part = new EditorPart(line[1],
                 ParseReplicationParameters(line),
-                line[2].ToLower() == "smoothed");
-
-            //if (line[3].ToLower() == "leave")
-                //part.ReplicationParams.LeaveAtLeastOnePart = true;
+                line[2].ToLower() == "smoothed"
+                );           
 
             return part;
         }
 
         private static PartReplication ParseReplicationParameters(List<string> line)
         {
-            /*switch (line[4].ToLower())
+            if (line.Count < 9)
+                return PartReplication.NoReplication();
+
+            if (!Enum.TryParse<PartReplicationMethod>(line[3], ignoreCase: true, out var replicationMethod))
+                replicationMethod = PartReplicationMethod.NoReplication;
+
+            if (!Enum.TryParse<PartStretchInWidthMethod>(line[4], ignoreCase: true, out var stretchInWidthMethod))
+                stretchInWidthMethod = PartStretchInWidthMethod.ReplicateAlongAllTracks;
+
+            if (!Enum.TryParse<PartScalingMethod>(line[5], ignoreCase: true, out var scalingMethod))
+                scalingMethod = PartScalingMethod.FixLength;
+
+            var scaleTexture = line[6].ToLower() == "scaletexture";
+            var bendPart = line[7].ToLower() == "bendpart";
+            var leaveAtLeastOne = line[8].ToLower() == "leaveatleastone";
+
+            var replicationParams = new Dictionary<string, float>();
+
+            for (int i = 9; i + 1 < line.Count; i+=2)
             {
-                case "attheend":
-                    return new ReplicationAtTheEnd();
+                if (!float.TryParse(line[i + 1], out var paramValue))
+                    paramValue = 0;
 
-                case "byfixedintervals":
-                    if (!float.TryParse(line[6], out var interval))
-                        return new ReplicationAtFixedPos();
+                replicationParams.Add(line[i], paramValue);
+            }            
 
-                    return new ReplicationByFixedIntervals(interval);
-
-                case "byevenintervals":
-                    if (!float.TryParse(line[6], out var minInterval))
-                        return new ReplicationAtFixedPos();
-
-                    return new ReplicationByEvenIntervals(minInterval);
-
-                case "stretchedByArc":
-                    if (!float.TryParse(line[6], out var originalLength))
-                        return new ReplicationAtFixedPos();
-
-                    if (!float.TryParse(line[8], out var minimalLength))
-                        return new ReplicationAtFixedPos();
-
-                    return new ReplicationStretchedByArc(originalLength, minimalLength);
-
-                case "stretchedbydeflection":
-                    if (!float.TryParse(line[6], out var originalLengthDeflection))
-                        return new ReplicationAtFixedPos();
-
-                    if (!float.TryParse(line[8], out var maxDeflection))
-                        return new ReplicationAtFixedPos();
-
-                    return new ReplicationStretchedByDeflection(originalLengthDeflection, maxDeflection);
-            }*/
-
-            return PartReplication.NoReplication();
+            return new PartReplication(replicationMethod, scalingMethod, stretchInWidthMethod, 
+                scaleTexture, bendPart, leaveAtLeastOne, replicationParams);
         }
 
         private static EditorLod GetLodFromLine(List<string> line)

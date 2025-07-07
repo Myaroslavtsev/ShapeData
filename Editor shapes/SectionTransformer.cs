@@ -25,9 +25,11 @@ namespace ShapeData.Editor_shapes
 
     class SectionTransformer
     {
-        public static (List<EditorTrackSection>, EditorTrackSection, float) SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
+        public static (List<EditorTrackSection>, EditorTrackSection, float) 
+            SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
         {
-            var partTraject = ChangeTrajectLength(section.Traject, replicationData.ReplicationParams["OriginalLength"]);
+            replicationData.GetReplicationParam("OriginalLength", out var originalLength);
+            var partTraject = ChangeTrajectLength(section.Traject, originalLength);
 
             return replicationData.ReplicationMethod switch
             {

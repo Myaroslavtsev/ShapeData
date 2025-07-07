@@ -44,12 +44,13 @@ namespace ShapeData
 
         public bool LeaveAtLeastOne { get; set; }
 
-        public Dictionary<string, float> ReplicationParams { get; private set; }
+        private Dictionary<string, float> ReplicationParams;      
 
         public IEnumerable<(string Name, float Value)> GetReplicationParams()
-        {            
-            foreach(var paramName in GetReplicationParamNames())
-                yield return (paramName, ReplicationParams[paramName]);            
+        {
+            if (ReplicationParams is not null)
+                foreach(var paramName in GetReplicationParamNames())
+                    yield return (paramName.ToLower(), ReplicationParams[paramName.ToLower()]);            
         }
 
         private PartReplication (PartReplicationMethod replicationMethod)
@@ -85,29 +86,45 @@ namespace ShapeData
             return new PartReplication(PartReplicationMethod.NoReplication);
         }
 
-        public void SetReplicationParams(Dictionary<string, float> replicationParams)
+        public void ReplaceReplicationParams(Dictionary<string, float> replicationParams)
         {
             ReplicationParams = replicationParams;
         }
 
         public bool GetReplicationParam(string paramName, out float parameter)
         {
-            if (!ReplicationParams.ContainsKey(paramName))
+            if (!ReplicationParams.ContainsKey(paramName.ToLower()))
             {
                 parameter = 0;
                 return false;
             }
 
-            parameter = (float)ReplicationParams[paramName];
+            parameter = (float)ReplicationParams[paramName.ToLower()];
             return true;
+        }
+
+        public void SetReplicationParam(string paramName, float parameter)
+        {
+            if (ReplicationParams is null)
+            {
+                ReplicationParams = new Dictionary<string, float>();
+                FillReplicationParams();
+            }
+
+            var realParamName = paramName.ToLower();
+
+            if (ReplicationParams.ContainsKey(realParamName))
+                ReplicationParams[realParamName] = parameter;
+            else
+                ReplicationParams.Add(realParamName, parameter);
         }
 
         private void FillReplicationParams()
         {
             foreach (var paramName in GetReplicationParamNames())
             {
-                if (!ReplicationParams.ContainsKey(paramName))
-                    ReplicationParams.Add(paramName, 0);
+                if (!ReplicationParams.ContainsKey(paramName.ToLower()))
+                    ReplicationParams.Add(paramName.ToLower(), 0);
             }
         }
 

@@ -31,7 +31,7 @@ namespace ShapeData
             return await reader.ReadToEndAsync();
         }
 
-        public static async Task SaveStringToFile(string fileName, string data, DataFileFormat format)
+        public static async Task SaveStringToFile(string fileName, string data, DataFileFormat format = DataFileFormat.PlainText)
         {
             switch (format)
             {

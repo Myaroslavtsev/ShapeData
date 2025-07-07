@@ -44,18 +44,8 @@ namespace ShapeData
 
             var dataString = ";;" + "Part" + ';' +
                 part.PartName + ';' +
-                smoothed + ';' +
-                part.Replication.ReplicationMethod;
-            //part.Replication.StretchInWidthMethod;
-            //part.Replication.ScalingMethod;
-            //part.Replication.BendPart;
-            //part.Replication.LeaveAtLeastOne;
-            //part.Replication.ScaleTexture;
-
-            foreach (var (Name, Value) in part.Replication.GetReplicationParams())
-            {
-                dataString += ';' + Name + ';' + Value.ToString("0.0000");
-            }
+                smoothed + ';' + 
+                MakeReplicationDataString(part.Replication);
 
             sb.AppendLine(dataString);
 
@@ -86,6 +76,22 @@ namespace ShapeData
                 vertex.Position.Z.ToString("0.0000") + ';' +
                 vertex.UvPosition.X.ToString("0.00000") + ';' +
                 vertex.UvPosition.Y.ToString("0.00000"));
+        }
+
+        private static string MakeReplicationDataString(PartReplication rep)
+        {
+            var dataString = rep.ReplicationMethod.ToString() + ';' +
+                rep.StretchInWidthMethod.ToString() + ';' +
+                rep.ScalingMethod.ToString() + ';';
+
+            dataString += rep.ScaleTexture? "ScaleTexture;" : "NotScaleTexture;";
+            dataString += rep.BendPart ? "BendPart;" : "NotBendPart;";
+            dataString += rep.LeaveAtLeastOne ? "LeaveAtLeastOne;" : "NotLeaveAtLeastOne;";
+
+            foreach (var param in rep.GetReplicationParams())
+                dataString += param.Name + ';' + param.Value.ToString("0.0000") + ';';
+
+            return dataString;
         }
     }
 }

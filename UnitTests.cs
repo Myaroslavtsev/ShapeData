@@ -28,7 +28,7 @@ namespace ShapeData
         }
 
         [Test]
-        public void TwoWayConversionTest() // public async Task TwoWayConversionTest() // for writing to .csv file
+        public async Task TwoWayConversionTest() // for writing to .csv file  // public void TwoWayConversionTest() 
         {
             var shape = new EditorShape("TestShape");
             shape.ShapeComment = "Test; comment";
@@ -55,11 +55,12 @@ namespace ShapeData
                     PartStretchInWidthMethod.ReplicateAlongAllTracks, 
                     false, false, true),
                 false));
+            newLod.Parts[1].Replication.SetReplicationParam("originallength", 1.15f);
             shape.AddLod(new EditorLod(2000));
 
             var csv = EditorShapeSerializer.MakeCsvFromEditorShape(shape);
 
-            //await GeneralMethods.SaveStringToFile("test.csv", csv);
+            await GeneralMethods.SaveStringToFile("test.csv", csv);
 
             var deserializedShape = EditorShapeDeserializer.MakeShapeFromCsv(csv);
 

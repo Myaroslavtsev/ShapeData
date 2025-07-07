@@ -216,11 +216,11 @@ namespace ShapeData
 
             var repParams = new Dictionary<string, float>
             {
-                { "OriginalLength", originalLength },
-                { "IntervalLength", intervalLength },
-                { "MaxDeflection", maxDeflection },
-                { "SubdivisionCount", subdivisionCount },
-                { "InitialShift", initialShift }
+                { "OriginalLength".ToLower(), originalLength },
+                { "IntervalLength".ToLower(), intervalLength },
+                { "MaxDeflection".ToLower(), maxDeflection },
+                { "SubdivisionCount".ToLower(), subdivisionCount },
+                { "InitialShift".ToLower(), initialShift }
             };
 
             var part = shape.Lods[0].AddPart(new EditorPart("Plane",
