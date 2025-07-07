@@ -13,7 +13,7 @@ namespace ShapeData.Editor_shapes
         const float Accuracy = 1e-4f;
 
         public static EditorPart AssemblePartSegments(EditorPart oldPart,
-            (List<EditorTrackSection> subsections, EditorTrackSection finalSection) newSections,
+            (List<EditorTrackSection> subsections, EditorTrackSection finalSection, float) newSections,
             (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments)
         {
             var assembledPart = new EditorPart(oldPart.PartName, PartReplication.NoReplication())
@@ -60,31 +60,7 @@ namespace ShapeData.Editor_shapes
             }
                 
         }
-
-        public static (List<EditorPolygon>, List<EditorPolygon>) MakeTypicalAndFinalSegments(
-            EditorPart part, 
-            (List<EditorTrackSection> subsections, EditorTrackSection finalSection) newSections)
-        {
-            (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments = 
-                (new List<EditorPolygon>(), new List<EditorPolygon>());
-
-            if (newSections.subsections is not null && newSections.subsections.Count > 0)
-                segments.typicalSegment = ScaleAndBendPart(part.Copy(false), newSections.subsections.First());
-            if (newSections.finalSection is not null)
-                segments.finalSegment = TrimPart(part.Copy(false), newSections.finalSection);
-
-            return segments;
-        }
-
-        public static EditorPart TransposePart(EditorPart part, Direction direction)
-        {
-            foreach (var v in part.Vertices()) 
-                v.Position = Transfigurations.TransposePoint(v.Position, direction);
-
-            return part;
-        }
-
-        public static EditorPolygon TransposePoly(EditorPolygon polygon, Direction direction)
+        private static EditorPolygon TransposePoly(EditorPolygon polygon, Direction direction)
         {
             foreach (var v in polygon.Vertices)
                 v.Position = Transfigurations.TransposePoint(v.Position, direction);
@@ -92,45 +68,53 @@ namespace ShapeData.Editor_shapes
             return polygon;
         }
 
-        public static List<EditorPolygon> ScaleAndBendPart(EditorPart part, EditorTrackSection subsection)
-        {            
-            float scaleFactor = 1;
-
-            if (part.Replication.GetReplicationParam("OriginalLength", out var originalLength))
-            {
-                if (originalLength != 0)
-                    scaleFactor = (float)subsection.Traject.Length / originalLength;
-                else
-                    scaleFactor = 1;
-            }
-                
-            if (part.Replication.BendPart)
-                return ScaleAndBendPolys(part.Polygons, scaleFactor, subsection.Traject);
-            else
-                return ScalePolys(part.Polygons, scaleFactor);
-        }
-
-        private static List<EditorPolygon> ScaleAndBendPolys(List<EditorPolygon> polygons, float scaleFactor, Trajectory bendTrajectory)
+        public static (List<EditorPolygon>, List<EditorPolygon>) MakeTypicalAndFinalSegments(
+            EditorPart part, 
+            (List<EditorTrackSection> subsections, EditorTrackSection finalSection, float scaleFactor) newSections)
         {
-            List<EditorPolygon> scaledPolys = new();
+            (List<EditorPolygon> typicalSegment, List<EditorPolygon> finalSegment) segments = 
+                (new List<EditorPolygon>(), new List<EditorPolygon>());
 
-            foreach (var poly in polygons)
+            EditorTrackSection mainSection = null;
+            if (newSections.subsections is not null && newSections.subsections.Count > 0)
+                mainSection = newSections.subsections.First();
+
+            switch (part.Replication.ScalingMethod)
             {
-                var transformedPoly = poly.Copy();
+                case PartScalingMethod.FixLength:
+                case PartScalingMethod.FixLengthAndTrim:
+                    segments.typicalSegment = part.Polygons;
+                    segments.finalSegment = TrimPolys(part.Polygons, newSections.finalSection, part.Replication.ScaleTexture);
+                    break;
 
-                foreach (var v in transformedPoly.Vertices)
-                    v.Position = Transfigurations.BendPoint(v.Position, bendTrajectory, scaleFactor);
+                case PartScalingMethod.Stretch:
+                    /*double scaleFactor = 1;
+                    if (mainSection is not null)
+                    {
+                        part.Replication.GetReplicationParam("OriginalLength", out var originalLength);
+                        scaleFactor = mainSection.Traject.Length / originalLength;
+                    }*/
 
-                scaledPolys.Add(transformedPoly);                
+                    segments.typicalSegment = StretchPolys(part.Polygons, newSections.scaleFactor);
+                    segments.finalSegment = TrimPolys(StretchPolys(part.Polygons, newSections.scaleFactor), 
+                        newSections.finalSection, part.Replication.ScaleTexture);
+                    break;
             }
 
-            return scaledPolys;
+            return (BendPolys(segments.typicalSegment, mainSection, part.Replication.BendPart),
+                BendPolys(segments.finalSegment, newSections.finalSection, part.Replication.BendPart));
         }
 
-        private static List<EditorPolygon> ScalePolys(List<EditorPolygon> polygons, float scaleFactor)
-        {            
+        private static List<EditorPolygon> StretchPolys(List<EditorPolygon> polygons, float scaleFactor)
+        {
+            if (polygons is null)
+                return null;
+
+            if (scaleFactor == 0)
+                scaleFactor = 1;
+
             List<EditorPolygon> scaledPolys = new();
-            
+
             foreach (var poly in polygons)
             {
                 var transformedPoly = poly.Copy();
@@ -139,12 +123,32 @@ namespace ShapeData.Editor_shapes
                     v.Position = new(v.Position.X, v.Position.Y, v.Position.Z * scaleFactor);
 
                 scaledPolys.Add(transformedPoly);
-            }            
+            }
 
             return scaledPolys;
         }
 
-        public static List<EditorPolygon> TrimPart(EditorPart part, EditorTrackSection finalSection)
+        private static List<EditorPolygon> BendPolys(List<EditorPolygon> polygons, EditorTrackSection section, bool shouldBend)
+        {
+            if (!shouldBend || section is null || polygons is null)
+                return polygons;
+
+            List<EditorPolygon> scaledPolys = new();
+
+            foreach (var poly in polygons)
+            {
+                var transformedPoly = poly.Copy();
+
+                foreach (var v in transformedPoly.Vertices)
+                    v.Position = Transfigurations.BendPoint(v.Position, section.Traject, 1);
+
+                scaledPolys.Add(transformedPoly);
+            }
+
+            return scaledPolys;
+        }
+
+        private static List<EditorPolygon> TrimPolys(List<EditorPolygon> polygons, EditorTrackSection finalSection, bool scaleTexture)
         {
             if (finalSection is null)
                 return null;
@@ -153,33 +157,34 @@ namespace ShapeData.Editor_shapes
 
             var newPolygons = new List<EditorPolygon>();
 
-            for (int i = 0; i < part.Polygons.Count; i++)
+            foreach(var poly in polygons)
             {
-                var pointsToTrim = part.Polygons[i].Vertices.Select(v => v.Position.Z).Count(z => z + Accuracy > maxZ);
+                var pointsToTrim = poly.Vertices.Select(v => v.Position.Z).Count(z => z + Accuracy > maxZ);
 
                 if (pointsToTrim == 0)
                 {
-                    newPolygons.Add(part.Polygons[i]);
+                    newPolygons.Add(poly);
                     continue;
                 }
-                    
-                if (pointsToTrim == part.Polygons[i].Vertices.Count)
-                {
-                    //part.Polygons.RemoveAt(i);
-                    continue;
-                }    
 
-                foreach(var v in part.Polygons[i].Vertices)
+                if (pointsToTrim == poly.Vertices.Count)
+                {
+                    continue;
+                }
+
+                var newPoly = poly.Copy();
+
+                foreach (var v in newPoly.Vertices)
                 {
                     if (v.Position.Z > maxZ)
                     {
-                        if (!part.Replication.ScaleTexture) 
+                        if (!scaleTexture)
                             v.UvPosition = new Vector2(v.UvPosition.X, (float)(v.UvPosition.Y * v.Position.Z / maxZ));
                         v.Position = new Vector3(v.Position.X, v.Position.Y, (float)maxZ);
                     }
                 }
 
-                newPolygons.Add(part.Polygons[i]);
+                newPolygons.Add(newPoly);
             }
 
             return newPolygons;

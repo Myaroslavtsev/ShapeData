@@ -77,7 +77,7 @@ namespace ShapeData
         // cases for replication by fixed intervals
         [TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 1, 0, 1.05f, 10.5f, 0f, TestName = "FixedInt 1 track long part")]
+            false, false, false, 1, 0, 10.05f, 10.5f, 0f, TestName = "FixedInt 1 track long part")]
         [TestCase("A1t10mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
             false, false, false, 1, 9, 1.05f, 1.05f, 0f, TestName = "FixedInt 1 track short part")]
@@ -111,41 +111,41 @@ namespace ShapeData
         // Subdivision trim cases
         [TestCase("A1t35mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 1, 3, 10.0f, 10.0f, 0f, TestName = "Subdiv - 1 divisions")]
+            false, false, false, 1, 3, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 1 divisions")]
         [TestCase("A1t35mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 35, 10.0f, 10.0f, 0f, TestName = "Subdiv - 10 divisions")]
+            false, false, false, 10, 35, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 10 divisions")]
         [TestCase("A1t3mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 3, 10.0f, 10.0f, 0f, TestName = "Subdiv - 3 of 10 divisions")]
+            false, false, false, 10, 3, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 3 of 10 divisions")]
         [TestCase("A1t2_5mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 2, 10.0f, 10.0f, 0f, TestName = "Subdiv - 2,5 of 10 no trim")]
+            false, false, false, 10, 2, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 2,5 of 10 no trim")]
         [TestCase("A1t2_5mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 3, 10.0f, 10.0f, 0f, TestName = "Subdiv - 2,5 of 10 last trimmed")]
+            false, false, false, 10, 3, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 2,5 of 10 last trimmed")]
         [TestCase("A1t500r10d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 88, 10.0f, 10.0f, 0f, TestName = "Subdiv - 1 track curve trimmed")]
+            false, false, false, 10, 88, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 1 track curve trimmed")]
         [TestCase("A1t0_8mStrt.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 1, 10.0f, 10.0f, 0f, TestName = "Subdiv - 0,8 of 10 last trimmed")]
+            false, false, false, 10, 1, 10.0f, 10.0f, 0f, 0f, TestName = "Subdiv - 0,8 of 10 last trimmed")]
 
         // segment bending
         [TestCase("A1t120r20d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 20, 42, 20.0f, 20.0f, 0f, TestName = "Bending - not bent")]
+            false, false, false, 20, 42, 20.0f, 20.0f, 0f, 0f, TestName = "Bending - not bent")]
         [TestCase("A1t120r20d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, true, false, 20, 42, 20.0f, 20.0f, 0f, TestName = "Bending - bent")]
+            false, true, false, 20, 42, 20.0f, 20.0f, 0f, 0f, TestName = "Bending - bent")]
 
         // stretching parts (at fixed interval replication)
         [TestCase("A1t120r20d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 22, 10.0f, 20.0f, 0f, TestName = "Stretching - no stretching")]
+            false, false, false, 10, 22, 10.0f, 20.0f, 0f, 0f, TestName = "Stretching - no stretching")]
         [TestCase("A1t120r20d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 20, 10.0f, 20.0f, 0f, TestName = "Stretching - stretch")]
+            false, false, false, 10, 21, 10.0f, 20.0f, 0f, 0f, TestName = "Stretching - stretch")]
 
         // initial shift
         [TestCase("A1t2_5mStrt.s", PartReplicationMethod.ByFixedIntervals,
@@ -164,33 +164,38 @@ namespace ShapeData
         // Non zero start point
         [TestCase("A1tXover20d.s", PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 10, 30, 10.0f, 10.0f, 0f, TestName = "Non-zero start pos and angle")]
+            false, false, false, 10, 30, 10.0f, 10.0f, 0f, 0f, TestName = "Non-zero start pos and angle")]
 
-        // cases for replication by even intervals
-        /*
-        [TestCase("A1t10mStrt.s", "ByEvenIntervals", 1.05f, 0f, false, 9)] // inaccurate division
-        [TestCase("A4t10mStrt.s", "ByEvenIntervals", 1.05f, 0f, false, 36)]
-        [TestCase("A1t500r10d.s", "ByEvenIntervals", 1.0f, 0f, false, 87)] // accurate division
-        [TestCase("A1t100mStrt.s", "ByEvenIntervals", 1.0f, 0f, false, 100)]
-        [TestCase("A1t10mStrt.s", "ByEvenIntervals", 0f, 0f, false, 1)] // protection from incorrect data
+        // Replication by even intervals
+        [TestCase("A1t15_2mStrt.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.FixLength, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 15, 10.0f, 10.0f, 0f, 0f, TestName = "Even - straight")]
+        [TestCase("A1t2_5mStrt.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 3, 10.0f, 10.0f, 0f, 0f, TestName = "Even - straight trimmed")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.FixLengthAndTrim, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 42, 10.0f, 10.0f, 0f, 0f, TestName = "Even - curved")]
+        [TestCase("A1t15_2mStrt.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 5, 8, 5.0f, 10.0f, 0f, 0f, TestName = "Even - straight long stretched")]
+        [TestCase("A1t2_5mStrt.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 2, 10.0f, 10.0f, 0f, 0f, TestName = "Even - straight short stretched")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 42, 10.0f, 10.0f, 0f, 0f, TestName = "Even - curved stretched")]
 
-        // cases for replication stretched by arc
-        [TestCase("A1t10mStrt.s", "StretchedByArc", 1.05f, 1.05f, false, 9)] // inaccurate division
-        [TestCase("A4t10mStrt.s", "StretchedByArc", 1.05f, 1.05f, false, 36)]
-        [TestCase("A1t500r10d.s", "StretchedByArc", 1.0f, 1.0f, false, 87)] // accurate division
-        [TestCase("A1t100mStrt.s", "StretchedByArc", 1.0f, 1.0f, false, 100)]
-        [TestCase("A1t0_8mStrt.s", "StretchedByArc", 1.05f, 1.05f, false, 0)] // short sections
-        [TestCase("A1t0_8mStrt.s", "StretchedByArc", 1.05f, 1.05f, true, 1)]
-
-        // cases for different original length values
-        [TestCase("A1t10mStrt.s", "StretchedByArc", 2.05f, 1.05f, false, 9)]
-        [TestCase("A1t10mStrt.s", "StretchedByArc", 0.05f, 1.05f, false, 9)]
-        [TestCase("A1t10mStrt.s", "StretchedByArc", 0f, 1.05f, false, 9)]
-
-        // cases for replication stretched by deflection
-        [TestCase("A1t10mStrt.s", "StretchedByDeflection", 1.05f, 1.05f, false, 1)]
-        [TestCase("A4t10mStrt.s", "StretchedByDeflection", 1.05f, 1.05f, false, 4)]
-        [TestCase("A1t500r10d.s", "StretchedByDeflection", 1.0f, 0.000762f, false, 50)]*/
+        // Replication by deflection
+        [TestCase("A1t10mStrt.s", PartReplicationMethod.ByDeflection,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 1, 1, 1.0f, 0, 0.5f, 0f, TestName = "Deflection - straight stretched")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByDeflection,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 1, 3, 1.0f, 0, 0.2f, 0f, TestName = "Deflection - curved stretched")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByDeflection,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 1, 1, 1.0f, 0, 20.0f, 0f, TestName = "Deflection - too large")]
 
         public async Task ShapeReplicationPartQuantityTest(
             string shapeName,
@@ -239,64 +244,6 @@ namespace ShapeData
             DrawShape(replica, TestContext.CurrentContext.Test.Name, 25);
 
             Assert.AreEqual(replicaCount, ActualreplicasCount);
-        }
-
-        /*
-         * Cases are commented as they are being checked visually using DrawShape method
-         *
-        // cases for replication at fixed pos
-        [TestCase("A1t10mStrt.s", "AtFixedPos", 0f, 0f, false, 0f, 0f)]
-        [TestCase("A2t10mStrt.s", "AtFixedPos", 0f, 0f, false, 2.4925f, 0f)]
-
-        // cases for replication at the end
-        [TestCase("A1t10mStrt.s", "AtTheEnd", 0f, 0f, false, 0f, 10f)]
-        [TestCase("A2t10mStrt.s", "AtTheEnd", 0f, 0f, true, 2.4925f, 10f)]
-        [TestCase("A1t500r10d.s", "AtTheEnd", 0f, 0f, true, 7.596123494f, 86.8240888f)]
-
-        // cases for replication by fixed intervals
-        [TestCase("A1t10mStrt.s", "ByFixedIntervals", 1.05f, 0f, false, 0f, 8.4f)]
-        [TestCase("A1t500r10d.s", "ByFixedIntervals", 1.0f, 0f, true, 7.377784366f, 85.57658946f)] // stops in 1 m before end
-
-        // cases for replication by even intervals
-        [TestCase("A1t10mStrt.s", "ByEvenIntervals", 1.05f, 0f, false, 0f, 8.88888888f)]
-        [TestCase("A2t10mStrt.s", "ByEvenIntervals", 1.05f, 0f, true, 2.4925f, 8.88888888f)]
-        [TestCase("A1t500r10d.s", "ByEvenIntervals", 2.0f, 0f, true, 7.247769813f, 84.824758448f)] // stops in 2.1 m before end
-
-        // cases for replication stretched by arc
-        [TestCase("A1t10mStrt.s", "StretchedByArc", 1.0f, 1.05f, false, 0f, 8.88888888f)]
-        [TestCase("A1t500r10d.s", "StretchedByArc", 1.0f, 2.0f, false, 7.247769813f, 84.824758448f)]
-
-        // cases for replication stretched by deflection
-        [TestCase("A1t10mStrt.s", "StretchedByDeflection", 1.0f, 1.05f, true, 0f, 0f)]
-        [TestCase("A1t500r10d.s", "StretchedByDeflection", 1.0f, 0.000762f, false, 7.2960507583f, 85.104749583f)] // last part at 9.8 degree
-        */
-        public async Task ShapeReplicationPartPositionTest(
-           string shapeName,
-           PartReplicationMethod repMethod,
-           PartScalingMethod scaleMethod,
-           PartStretchInWidthMethod stretchMethod,
-           bool scaleTexture, bool bendPart, bool leaveOne,
-           float X, float Z)
-        {
-            var td = await GetTsectionDat();
-
-            var shape = new EditorShape("Simple shape");
-
-            var part = shape.Lods[0].AddPart(
-                new EditorPart("Plane", new PartReplication(repMethod, scaleMethod, stretchMethod, scaleTexture, bendPart, leaveOne)));
-
-            part.AddPolygon(new EditorPolygon(
-                new List<EditorVertex> {
-                    new EditorVertex(-1.2f, 0, 0, 0, 0),
-                    new EditorVertex(1.2f, 0, 0, 1, 0),
-                    new EditorVertex(0, 1.7f, 0, 0.5f, 1)
-                }));
-
-            var replica = await ShapeReplicator.ReplicatePartsInShape(shape, td.TrackShapes[shapeName], td);
-
-            var lastPartPoly = replica.Lods[0].Parts.Last().Polygons[0];
-            Assert.AreEqual(X, lastPartPoly.Vertices[2].Position.X, 1e-5f);
-            Assert.AreEqual(Z, lastPartPoly.Vertices[2].Position.Z, 1e-5f);
         }
 
         private static void DrawShape(EditorShape shape, string name, int pixelsPerMeter)

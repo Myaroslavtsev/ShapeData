@@ -9,82 +9,117 @@ using ShapeData.Geometry;
 
 namespace ShapeData.Editor_shapes
 {
+    struct ReplicationParams
+    {
+        public int SubdivisionNum;
+        public float OriginalLength;
+        public float InitialShift;
+
+        public ReplicationParams (int subdivisionNum, float originalLength, float initialShift)
+        {
+            SubdivisionNum = subdivisionNum;
+            OriginalLength = originalLength;
+            InitialShift = initialShift;
+        }
+    }
+
     class SectionTransformer
     {
-        public static (List<EditorTrackSection>, EditorTrackSection) SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
+        public static (List<EditorTrackSection>, EditorTrackSection, float) SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
         {
             var partTraject = ChangeTrajectLength(section.Traject, replicationData.ReplicationParams["OriginalLength"]);
 
             return replicationData.ReplicationMethod switch
             {
                 PartReplicationMethod.ByFixedIntervals or PartReplicationMethod.ByEvenIntervals or PartReplicationMethod.ByDeflection =>
-                    MakeSubsectionList(section, replicationData),
+                    MakeSubsectionList4(section, replicationData),
 
                 PartReplicationMethod.AtFixedPos => (new List<EditorTrackSection> {
-                    new EditorTrackSection(section.StartDirection, partTraject)}, null),
+                    new EditorTrackSection(section.StartDirection, partTraject)}, null, 1),
 
                 PartReplicationMethod.AtTheEnd => (new List<EditorTrackSection> {
-                    new EditorTrackSection(section.EndDirection, partTraject) }, null),
+                    new EditorTrackSection(section.EndDirection, partTraject) }, null, 1),
 
                 _ => (new List<EditorTrackSection> {
-                    new EditorTrackSection(section.StartDirection, partTraject)}, null)
+                    new EditorTrackSection(section.StartDirection, partTraject)}, null, 1)
             };
         }
 
-        private static (List<EditorTrackSection>, EditorTrackSection) MakeSubsectionList(
-            EditorTrackSection section, 
+        private static (List<EditorTrackSection>, EditorTrackSection, float) MakeSubsectionList4(
+            EditorTrackSection section,
             PartReplication replicationData)
         {
-            // valid only for Fixed, Even, Deflection replication methods
+            var replicationParams = ExtractReplicationParameters(replicationData);
 
-            replicationData.GetReplicationParam("InitialShift", out var initialShift);
-            replicationData.GetReplicationParam("SubdivisionCount", out var subdivisionCount);
-            replicationData.GetReplicationParam("OriginalLength", out var originalLength);
+            var subIntervals = GetSubIntervalCountAndLength(section, replicationData);
 
-            int subdivisionNum = (int)Math.Round(subdivisionCount);
-            if (subdivisionNum < 1)
-                subdivisionNum = 1;
+            var startDirection = ShiftStartDirection(section.Traject, section.StartDirection, replicationParams.InitialShift);
 
-            var subIntervals = GetSubIntervalCountAndLength(section, replicationData);            
+            var mainSections = GenerateMainSections(section.Traject, startDirection, subIntervals, replicationParams);
 
-            var mainTraject = ChangeTrajectLength(section.Traject, subIntervals.Length * subdivisionNum);
-                        
-            var startDirection = ShiftStartDirection(section.Traject, section.StartDirection, initialShift);
-
-            var mainSectionCount = subIntervals.Count / subdivisionNum; // integer division is floored automatically
-            var mainSections = GenerateSectionList(startDirection, mainTraject, mainSectionCount);
-
-            Direction lastDirection;
-            if (mainSectionCount > 0)
+            var lastDirection = startDirection;
+            if (mainSections.Count > 0)
                 lastDirection = mainSections.Last().EndDirection;
-            else
-                lastDirection = startDirection;
 
-            if (replicationData.ScalingMethod == PartScalingMethod.FixLength ||
-                replicationData.ScalingMethod == PartScalingMethod.FixLengthAndTrim)
-                mainSections = RestoreSectionLengthes(mainSections, originalLength);
+            var lastSection = GenerateLastSection(section.Traject, lastDirection, subIntervals, replicationParams, 
+                mainSections.Count, replicationData.ScalingMethod);
 
-            Trajectory lastTraject;
-            if (replicationData.ScalingMethod == PartScalingMethod.FixLengthAndTrim)
-                lastTraject = ChangeTrajectLength(section.Traject, section.Traject.Length - mainTraject.Length * mainSectionCount);
-            else
-                lastTraject = ChangeTrajectLength(section.Traject, subIntervals.Length * (subIntervals.Count % subdivisionNum));
+            if (mainSections.Count == 0 && lastSection is null && replicationData.LeaveAtLeastOne)
+                lastSection = new EditorTrackSection(startDirection, 
+                    ChangeTrajectLength(section.Traject, replicationParams.OriginalLength / replicationParams.SubdivisionNum));
+
+            var scaleFactor = subIntervals.Length * replicationParams.SubdivisionNum / replicationParams.OriginalLength;
+
+            return (mainSections, lastSection, scaleFactor);
+        }
+
+        private static EditorTrackSection GenerateLastSection(
+            Trajectory traject,
+            Direction lastDirection,
+            (int Count, float Length) subIntervals,
+            ReplicationParams replicationParams,
+            int mainSectionsCount,
+            PartScalingMethod scalingMethod)
+        {
+            var lastSectionLength = traject.Length -
+                subIntervals.Length * replicationParams.SubdivisionNum * mainSectionsCount;
+
+            if (scalingMethod == PartScalingMethod.FixLength)
+            {
+                var subIntervalOriginalLength = replicationParams.OriginalLength / replicationParams.SubdivisionNum;
+                lastSectionLength = Math.Floor(lastSectionLength / subIntervalOriginalLength) * subIntervalOriginalLength;
+            }
+
+            var lastTraject = ChangeTrajectLength(traject, lastSectionLength);
 
             EditorTrackSection lastSection = null;
             if (lastTraject.Length > 0)
                 lastSection = new EditorTrackSection(lastDirection, lastTraject);
 
-            return (mainSections, lastSection);
+            return lastSection;
         }
 
-        private static List<EditorTrackSection> RestoreSectionLengthes(List<EditorTrackSection> sections, float originalLength)
+        private static List<EditorTrackSection> GenerateMainSections(
+            Trajectory traject,
+            Direction startDirection,
+            (int Count, float Length) subIntervals,
+            ReplicationParams replicationParams)
         {
-            var newSections = new List<EditorTrackSection>();
+            var mainTraject = ChangeTrajectLength(traject, subIntervals.Length * replicationParams.SubdivisionNum);
 
-            foreach (var s in sections)
-                newSections.Add(new EditorTrackSection(s.StartDirection, ChangeTrajectLength(s.Traject, originalLength)));
+            var mainSectionCount = subIntervals.Count / replicationParams.SubdivisionNum; // integer division is floored automatically
 
-            return newSections;
+            return GenerateSectionList(startDirection, mainTraject, mainSectionCount);
+        }
+
+        private static ReplicationParams ExtractReplicationParameters(PartReplication replicationData)
+        {
+            replicationData.GetReplicationParam("InitialShift", out var initialShift);
+            replicationData.GetReplicationParam("OriginalLength", out var originalLength);
+
+            var subdivisionNum = GetSubdivisionNum(replicationData);
+
+            return new ReplicationParams(subdivisionNum, originalLength, initialShift);
         }
 
         private static List<EditorTrackSection> GenerateSectionList(
@@ -133,10 +168,7 @@ namespace ShapeData.Editor_shapes
         {            
             var sectionLength = section.Traject.Length;
 
-            replicationData.GetReplicationParam("SubdivisionCount", out var subdivisionCount);
-            int subdivisionNum = (int)Math.Round(subdivisionCount);
-            if (subdivisionNum < 1)
-                subdivisionNum = 1;
+            var subdivisionNum = GetSubdivisionNum(replicationData);
 
             switch (replicationData.ReplicationMethod)
             {
@@ -150,15 +182,15 @@ namespace ShapeData.Editor_shapes
                 case PartReplicationMethod.ByEvenIntervals:
                     replicationData.GetReplicationParam("IntervalLength", out var intervalLength);
                     var stretchedInterval = StretchInterval(intervalLength, sectionLength, subdivisionNum);
-                    var evenCount = CountSubintervals(stretchedInterval, (float)sectionLength, 
+                    var evenCount = CountSubintervals((float)sectionLength, stretchedInterval,
                         replicationData.LeaveAtLeastOne);
                     return (evenCount, stretchedInterval);
 
                 case PartReplicationMethod.ByDeflection:
                     replicationData.GetReplicationParam("MaxDeflection", out var deflection);
-                    var deflectionCount = CountSubintervals(
+                    var deflectionCount = CountSubintervals((float)sectionLength,
                         StretchInterval(LengthByDeflection(section.Traject, deflection), sectionLength, subdivisionNum),
-                        (float)sectionLength, replicationData.LeaveAtLeastOne);
+                        replicationData.LeaveAtLeastOne);
                     return (deflectionCount, (float)(sectionLength / deflectionCount));
 
                 default:
@@ -166,12 +198,21 @@ namespace ShapeData.Editor_shapes
             }
         }
 
+        private static int GetSubdivisionNum(PartReplication replicationData)
+        {
+            replicationData.GetReplicationParam("SubdivisionCount", out var subdivisionCount);
+            
+            var subdivisionNum = (int)Math.Round(subdivisionCount);
+
+            if (subdivisionNum < 1)
+                subdivisionNum = 1;
+
+            return subdivisionNum;
+        }
+
         private static int CountSubintervals(float sectionLength, float intervalLength, bool leaveAtLeastOne)
         {
             int count = (int)Math.Floor(sectionLength / intervalLength);
-
-            if (leaveAtLeastOne && count == 0)
-                count = 1;
 
             return count;
         }
@@ -188,9 +229,9 @@ namespace ShapeData.Editor_shapes
             if (trajectory.Radius == 0)
                 return trajectory.Length;
 
-            double angleInterval = 2 * Math.Acos(1 - deflection / trajectory.Radius) * 180 / Math.PI;
+            double angleInterval = 2 * Math.Acos(1 - Math.Abs(deflection / trajectory.Radius));
 
-            return angleInterval * trajectory.Radius;
+            return Math.Min(angleInterval * trajectory.Radius, trajectory.Length);
         }      
     }
 }
