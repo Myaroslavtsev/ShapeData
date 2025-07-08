@@ -331,5 +331,44 @@ namespace ShapeData
 
             return (new Vector2(minX, minZ), new Vector2(maxX, maxZ));
         }
+
+        [TestCase(1)]
+        public async Task BatchConversion(int testParameter,
+            PartReplicationMethod repMethod = PartReplicationMethod.ByFixedIntervals,
+            PartScalingMethod scaleMethod = PartScalingMethod.FixLength,
+            PartStretchInWidthMethod stretchMethod = PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            int subdivisionCount = 1,            
+            float originalLength = 1.0f,
+            float intervalLength = 1.0f,
+            float maxDeflection = 0,
+            float initialShift = 0)
+        {
+            var shape = new EditorShape("TestShape");
+
+            var repParams = new Dictionary<string, float>
+            {
+                { "OriginalLength".ToLower(), originalLength },
+                { "IntervalLength".ToLower(), intervalLength },
+                { "MaxDeflection".ToLower(), maxDeflection },
+                { "SubdivisionCount".ToLower(), subdivisionCount },
+                { "InitialShift".ToLower(), initialShift }
+            };
+
+            var part = shape.Lods[0].AddPart(new EditorPart("Plane",
+                new PartReplication(repMethod, scaleMethod, stretchMethod, false, false, false, repParams)));
+
+            for (int i = 0; i < Math.Max(1, subdivisionCount); i++)
+                part.AddPolygon(new EditorPolygon(
+                    new List<EditorVertex> {
+                        new EditorVertex(-1.2f, 0, i*1.0f, 0, 0),
+                        new EditorVertex(-1.2f, 0, (i + 1)*1.0f, 0, 1),
+                        new EditorVertex(+1.2f, 0, (i + 1)*1.0f, 1, 1),                        
+                        new EditorVertex(+1.2f, 0, i*1.0f, 1, 0)
+                    }));
+
+            await GeneralMethods.SaveStringToFile(shape.ShapeName + ".csv", EditorShapeSerializer.MakeCsvFromEditorShape(shape));            
+
+            await BatchConverter.ConvertShape(shape.ShapeName + ".csv", "tsection.dat", "*.*", 20);
+        }
     }
 }

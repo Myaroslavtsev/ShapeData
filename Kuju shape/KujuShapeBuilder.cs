@@ -85,9 +85,12 @@ namespace ShapeData.Kuju_shape
                 new DataBlock("Align", new List<string> { "None" }),
                 new DataBlock("Description", new List<string> { shapeName }) });
 
-        public static string GetFfeditCommandLine(string directory, string shapeName) =>
-            directory + "ffeditc_unicode.exe " + '"' + directory + shapeName + '"' + " /o:out\\.s";
-        
+        public static string GetFfeditCommandLine(string directory, string shapeName)
+        {
+            var shapePathAndName = '"' + directory + shapeName + '"';
+            return "ffeditc_unicode.exe " + shapePathAndName + " /o:" + shapeName + "\r\n";
+        }
+                    
         private static DataBlock ShapeLodControls(EditorShape shape, ShapePreparator preparedShape)
         {
             var lodsBlock = new DataBlock("distance_levels", new List<string> { shape.Lods.Count.ToString() });
@@ -228,9 +231,10 @@ namespace ShapeData.Kuju_shape
                 {
                     for(int corner = 2; corner < poly.Vertices.Count; corner++)
                     {
-                        for (int angle = corner - 2; angle <= corner; angle++)
-                            vertexIds.Add(poly.Vertices[angle].KujuVertexId);
-                            
+                        vertexIds.Add(poly.Vertices[0].KujuVertexId);
+                        vertexIds.Add(poly.Vertices[corner - 1].KujuVertexId);
+                        vertexIds.Add(poly.Vertices[corner].KujuVertexId);
+
                         normalIds.Add(poly.KujuNormalId);
                         normalIds.Add(3);
                     }

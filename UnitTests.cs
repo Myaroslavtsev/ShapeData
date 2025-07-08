@@ -28,7 +28,7 @@ namespace ShapeData
         }
 
         [Test]
-        public async Task TwoWayConversionTest() // for writing to .csv file  // public void TwoWayConversionTest() 
+        public async Task TwoWayConversionTest() // for writing to .csv file // public void TwoWayConversionTest() 
         {
             var shape = new EditorShape("TestShape");
             shape.ShapeComment = "Test; comment";
@@ -60,7 +60,7 @@ namespace ShapeData
 
             var csv = EditorShapeSerializer.MakeCsvFromEditorShape(shape);
 
-            await GeneralMethods.SaveStringToFile("test.csv", csv);
+            //await GeneralMethods.SaveStringToFile("test.csv", csv);
 
             var deserializedShape = EditorShapeDeserializer.MakeShapeFromCsv(csv);
 

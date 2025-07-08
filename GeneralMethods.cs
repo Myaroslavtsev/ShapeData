@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ShapeData
@@ -50,6 +52,43 @@ namespace ShapeData
                         break;
                     }
             }            
+        }
+
+        public static Task RunTasksInParallel(List<(Task task, string taskName)> tasks, int maxThreadCount)
+        {
+            var taskFactories = tasks.Select(t => (Func<Task>)(async () =>
+            {
+                Console.WriteLine("Converting " + t.taskName);
+                await t.task;
+            }));
+
+            return RunTasksInParallel(taskFactories, maxThreadCount);
+        }
+
+        public static Task RunTasksInParallel(List<Task> tasks, int maxThreadCount)
+        {
+            var taskFactories = tasks.Select(t => (Func<Task>)(() => t));
+            return RunTasksInParallel(taskFactories, maxThreadCount);
+        }
+
+        private static async Task RunTasksInParallel(IEnumerable<Func<Task>> taskFactories, int maxThreadCount)
+        {
+            var semaphore = new SemaphoreSlim(maxThreadCount);
+
+            var runningTasks = taskFactories.Select(async taskFactory =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    await taskFactory();
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }).ToList();
+
+            await Task.WhenAll(runningTasks);
         }
     }
 }

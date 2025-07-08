@@ -20,6 +20,9 @@ namespace ShapeData
 
         private static void AddShapeDataToSb(EditorShape shape, StringBuilder sb)
         {
+            if (shape.ShapeComment is null)
+                shape.ShapeComment = "";
+
             sb.AppendLine("Shape" + ';' + shape.ShapeName.Replace(';', ':') + ';' + shape.ShapeComment.Replace(';', ':'));
 
             foreach (var lod in shape.Lods.OrderBy(l => l.Distance))
