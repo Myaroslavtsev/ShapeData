@@ -91,8 +91,8 @@ namespace ShapeData.Kuju_shape
         private static bool StringMatchesMask(string filename, string mask)
         {
             string pattern = Regex.Escape(mask)
-            .Replace(@"\*", ".*")   // * → любое количество любых символов
-            .Replace(@"\?", ".");   // ? → один любой символ
+            .Replace(@"\*", ".*")   // * - any symbol count 
+            .Replace(@"\?", ".");   // ? - one symbol only
 
             pattern = "^" + pattern + "$";
 

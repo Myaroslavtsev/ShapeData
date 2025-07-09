@@ -135,19 +135,19 @@ namespace ShapeData.Kuju_shape
 
             var normalsCount = triangles.ToString();
             var vertexStateCount = preparedShape.LightMatIds.Count.ToString();
-            var angleCount = (triangles * 3).ToString(); //lod.Vertices().Count().ToString(); // lod.VertexCount(); - doesn't count vertices used by several polys twice
-            var trilistCount = lod.GetPrimStateIdSet().Count.ToString(); //lod.Parts.Count.ToString(); // ??
+            var angleCount = (triangles * 3).ToString(); // doesn't count vertices used by several polys twice
+            var trilistCount = lod.GetPrimStateIdSet().Count.ToString();
 
             return new ("sub_object_header", new List<string> { 
                 "00000400", "-1", "-1",  "000001d2", "000001c4"},
                 new List<DataBlock> { 
                     new DataBlock("geometry_info", new List<string> {
-                        normalsCount, // or triangle count???
-                        vertexStateCount, // all should be used???
+                        normalsCount,
+                        vertexStateCount,
                         "0",
                         angleCount, // or triangles.Count * 3
                         "0", "0",
-                        trilistCount, // trilists.Count
+                        trilistCount,
                         "0", "0", "0"
                     }, new List<DataBlock> { 
                         new DataBlock("geometry_nodes", new List<string> { "1" }, new List<DataBlock> { 

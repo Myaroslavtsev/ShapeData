@@ -178,18 +178,15 @@ namespace ShapeData.Kuju_tsection.dat
             var span = data.AsSpan();
             var path = new KujuTrackPath();
 
-            // Пропустить первый элемент (обычно "0")
             int idx = span.IndexOf(' ');
             if (idx == -1 || idx + 1 >= span.Length) return;
             span = span.Slice(idx + 1);
 
-            // Далее: dX, dY, dZ, dA
             if (!TryReadDouble(ref span, out double dX, cultureInfo)) return;
             if (!TryReadDouble(ref span, out double dY, cultureInfo)) return;
             if (!TryReadDouble(ref span, out double dZ, cultureInfo)) return;
             if (!TryReadDouble(ref span, out double dA, cultureInfo)) return;
 
-            // Остальные — int ID
             while (!span.IsEmpty)
             {
                 if (!TryReadInt(ref span, out int id)) return;
@@ -301,7 +298,7 @@ namespace ShapeData.Kuju_tsection.dat
 
                 if (dataBlock.Caption.AsSpan().Equals("trackshapes".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
-                    return dataBlock.Data; // этот блок содержит много TrackShape
+                    return dataBlock.Data;
                 }
 
                 blockStart = dataBlock.BlockEnd;
@@ -314,20 +311,17 @@ namespace ShapeData.Kuju_tsection.dat
 
             while (cursor < file.Length)
             {
-                // 1. Найти начало строки
                 int lineEnd = file.IndexOf("\r\n", cursor, StringComparison.OrdinalIgnoreCase);
                 if (lineEnd == -1) lineEnd = file.Length;
 
                 var line = file.AsSpan(cursor, lineEnd - cursor);
 
-                // 2. Найти открывающую скобку
                 int openBracketPos = line.IndexOf('(');
                 if (openBracketPos >= 0)
                 {
                     var caption = line[..openBracketPos].Trim().ToString();
                     int globalBracketPos = cursor + openBracketPos;
 
-                    // 3. Найти конец блока начиная с открывающей скобки
                     int relativeEnd = FindDataBlockEnd(file.AsSpan(globalBracketPos));
                     if (relativeEnd <= 0)
                         return new TsectionDataBlock("", "", -1);
@@ -338,8 +332,7 @@ namespace ShapeData.Kuju_tsection.dat
                     return new TsectionDataBlock(caption, innerData, globalEnd);
                 }
 
-                // 4. Перейти к следующей строке
-                cursor = lineEnd + 2;
+                cursor = lineEnd + 2; // Skip "\r\n"
             }
 
             return new TsectionDataBlock("", "", -1);
