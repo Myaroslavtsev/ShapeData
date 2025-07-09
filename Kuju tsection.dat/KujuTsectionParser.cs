@@ -91,7 +91,7 @@ namespace ShapeData.Kuju_tsection.dat
 
             Parallel.ForEach(dataBlocks, dataBlock =>
             {
-                if (dataBlock.Caption == "TrackSection")
+                if (dataBlock.Caption.AsSpan().Equals("tracksection".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     var sectionId = ParseSectionId(dataBlock.Data);
                     if (sectionId == null) return;
@@ -112,7 +112,7 @@ namespace ShapeData.Kuju_tsection.dat
 
             Parallel.ForEach(dataBlocks, dataBlock =>
             {
-                if (dataBlock.Caption == "TrackShape")
+                if (dataBlock.Caption.AsSpan().Equals("trackshape".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     var sectionId = ParseSectionId(dataBlock.Data);
                     if (sectionId != null)
@@ -282,7 +282,7 @@ namespace ShapeData.Kuju_tsection.dat
                 if (dataBlock.BlockEnd == -1)
                     return "";
 
-                if (dataBlock.Caption == "TrackSections")
+                if (dataBlock.Caption.AsSpan().Equals("tracksections".AsSpan(), StringComparison.OrdinalIgnoreCase))
                     return dataBlock.Data;
 
                 blockStart = dataBlock.BlockEnd;
@@ -299,7 +299,7 @@ namespace ShapeData.Kuju_tsection.dat
                 if (dataBlock.BlockEnd == -1)
                     return "";
 
-                if (dataBlock.Caption.Equals("TrackShapes", StringComparison.OrdinalIgnoreCase))
+                if (dataBlock.Caption.AsSpan().Equals("trackshapes".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     return dataBlock.Data; // этот блок содержит много TrackShape
                 }

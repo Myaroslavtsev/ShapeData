@@ -100,7 +100,12 @@ namespace ShapeData.Editor_shapes
             var trajectories = new List<Trajectory>();
 
             foreach (var id in initialSections)
-                trajectories.Add(tsectionDat.TrackSections[id].SectionTrajectory);
+            {
+                if (tsectionDat.TrackSections.ContainsKey(id))
+                    trajectories.Add(tsectionDat.TrackSections[id].SectionTrajectory);
+                else
+                    Console.WriteLine("WARNING: Track section #" + id + " not found in tsection.dat!");
+            }
 
             return SimplifyTrajectories(trajectories);
         }

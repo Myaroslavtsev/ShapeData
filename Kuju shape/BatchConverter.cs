@@ -17,61 +17,75 @@ namespace ShapeData.Kuju_shape
 {
     class BatchConverter
     {
-        public async static Task ConvertShape(string shapeFileName,
-            string tsectionPath, 
-            string shapeFileNameMask = "*.*",            
+        public async static Task ConvertShape(
+            string shapeFileName,
+            string tsectionPath,
+            string shapeFileNameMask = "*.*",
             int limitCount = 0)
-        {            
+        {
             string shapesPath = Directory.GetCurrentDirectory() + "\\Shapes\\";
             Directory.CreateDirectory(shapesPath);
 
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Loading shape from " + shapeFileName);
+            Console.WriteLine($"{DateTime.Now:T} Loading shape from {shapeFileName}");
             var shape = EditorShapeDeserializer.MakeShapeFromCsv(await GeneralMethods.ReadFileToString(shapeFileName));
 
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Loading tsection.dat");
+            Console.WriteLine($"{DateTime.Now:T} Loading tsection.dat");
             var td = await KujuTsectionParser.LoadTsection(tsectionPath);
 
-            var refFile = "SIMISA@@@@@@@@@@JINX0r1t______" + "\r\n" + "\r\n";
+            var refFile = "SIMISA@@@@@@@@@@JINX0r1t______\r\n\r\n";
             var batFile = "";
 
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Generating conversion tasks");
-            var conversionTasks = new List<(Task task, string taskName)>();
+            Console.WriteLine($"{DateTime.Now:T} Starting shape generation");
 
             int convertedShapesCount = 0;
-            foreach(var trackShape in td.TrackShapes)
+            var tasks = new List<Task>();
+            var semaphore = new SemaphoreSlim(Environment.ProcessorCount * 2);
+
+            foreach (var trackShape in td.TrackShapes)
             {
                 if (StringMatchesMask(trackShape.Key, shapeFileNameMask))
                 {
+                    var trackKey = trackShape.Key;
+                    var trackValue = trackShape.Value;
+
                     var sb = new StringBuilder();
-                    KujuShapeBuilder.GetRefFileEntry(trackShape.Key, shape.ShapeName).PrintBlock(sb);
+                    KujuShapeBuilder.GetRefFileEntry(trackKey, shape.ShapeName).PrintBlock(sb);
                     refFile += sb.ToString();
 
-                    batFile += KujuShapeBuilder.GetFfeditCommandLine(shapesPath, trackShape.Key);
+                    batFile += KujuShapeBuilder.GetFfeditCommandLine(shapesPath, trackKey);
 
-                    conversionTasks.Add ((Task.Run(async () =>
+                    await semaphore.WaitAsync();
+                    tasks.Add(Task.Run(async () =>
                     {
-                        var replica = await ShapeReplicator.ReplicatePartsInShape(shape, trackShape.Value, td);
+                        try
+                        {
+                            var replica = await ShapeReplicator.ReplicatePartsInShape(shape, trackValue, td);
+                            var shapeFiles = KujuShapeBuilder.BuildShapeFile(replica);
 
-                        var shapeFiles = KujuShapeBuilder.BuildShapeFile(replica);
-
-                        await GeneralMethods.SaveStringToFile(shapesPath + trackShape.Key, shapeFiles.s, DataFileFormat.UTF16LE);
-                        await GeneralMethods.SaveStringToFile(shapesPath + trackShape.Key + 'd', shapeFiles.sd, DataFileFormat.UTF16LE);
-                    }), 
-                    trackShape.Key));
+                            await GeneralMethods.SaveStringToFile(shapesPath + trackKey, shapeFiles.s, DataFileFormat.UTF16LE);
+                            await GeneralMethods.SaveStringToFile(shapesPath + trackKey + 'd', shapeFiles.sd, DataFileFormat.UTF16LE);
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    }));
 
                     convertedShapesCount++;
                     if (limitCount > 0 && convertedShapesCount >= limitCount) break;
-                }                
+
+                    if (convertedShapesCount % 100 == 0)
+                        Console.WriteLine($"{DateTime.Now:T} Converted {convertedShapesCount} shapes");
+                }
             }
 
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Saving .ref and .bat files");
+            await Task.WhenAll(tasks);
+
+            Console.WriteLine($"{DateTime.Now:T} Saving .ref and .bat files");
             await GeneralMethods.SaveStringToFile(shape.ShapeName + ".ref", refFile, DataFileFormat.UTF16LE);
             await GeneralMethods.SaveStringToFile(shape.ShapeName + ".bat", batFile, DataFileFormat.PlainText);
 
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Starting shape generation");
-            await GeneralMethods.RunTasksInParallel(conversionTasks, 16);
-
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "All shape generation tasks finished. Execute .bat to compress shapes.");
+            Console.WriteLine($"{DateTime.Now:T} All shape generation tasks finished. Execute .bat to compress shapes.");
         }
 
         private static bool StringMatchesMask(string filename, string mask)
