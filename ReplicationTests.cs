@@ -368,7 +368,7 @@ namespace ShapeData
 
             await GeneralMethods.SaveStringToFile(shape.ShapeName + ".csv", EditorShapeSerializer.MakeCsvFromEditorShape(shape));            
 
-            await BatchConverter.ConvertShape(shape.ShapeName + ".csv", "tsection.dat", "*.*", 20);
+            await BatchConverter.ConvertShape(shape.ShapeName + ".csv", "tsection.dat", "*.*", "", 20);
         }
     }
 }
