@@ -22,29 +22,34 @@ public class BatchConverter
         string tsectionPath,
         string shapeFileNameMask = "*.*",
         string ffeditLocation = "",
-        int limitCount = 0)
+        int limitCount = 0,
+        float gauge = 0,
+        bool skipRoads = true,
+        bool prohibitVisualObstruction = false,
+        bool hasWinterTextures = false)
     {
         var (shapesPath, refAndBatPath) = PrepareDirectories();
 
-        var (shape, td) = await LoadInputData(shapeFileName, tsectionPath);
+        var (shape, td) = await LoadInputData(shapeFileName, tsectionPath, skipRoads);
 
         var (ffeditExists, ffeditPathOnly, ffeditFileName) = BuildFfeditPaths(ffeditLocation);
 
         Console.WriteLine($"{DateTime.Now:T} Starting shape generation");
 
-        var (refFile, batFile, tasks) = await CreateShapeConversionTasks(
-            shape, td, shapesPath, shapeFileNameMask, limitCount,
-            ffeditExists, ffeditPathOnly, ffeditFileName);
+        var (refFile, batFile, tasks, numTasks) = await CreateShapeConversionTasks(
+            shape, td, shapesPath, shapeFileNameMask, gauge, limitCount,
+            ffeditExists, ffeditPathOnly, ffeditFileName,
+            prohibitVisualObstruction, hasWinterTextures);
 
         await Task.WhenAll(tasks);
 
-        await SaveOutputFiles(refAndBatPath, shape.ShapeName, refFile, batFile, ffeditExists);
+        await SaveOutputFiles(refAndBatPath, shape.ShapeName, refFile, batFile, ffeditExists, numTasks);
     }
 
     private static (string, string) PrepareDirectories()
     {
-        string shapesPath = Path.Combine(Directory.GetCurrentDirectory(), "Shapes");
-        string refAndBatPath = Path.Combine(Directory.GetCurrentDirectory(), "RefAndBat");
+        string shapesPath = Directory.GetCurrentDirectory() + "\\Shapes\\";
+        string refAndBatPath = Directory.GetCurrentDirectory() + "\\RefAndBat\\";
 
         Directory.CreateDirectory(shapesPath);
         Directory.CreateDirectory(refAndBatPath);
@@ -53,26 +58,26 @@ public class BatchConverter
     }
 
     private static async Task<(EditorShape shape, KujuTsectionDat td)> LoadInputData(
-        string shapeFileName, string tsectionPath)
+        string shapeFileName, string tsectionPath, bool skipRoads = true)
     {
         Console.WriteLine($"{DateTime.Now:T} Loading shape from {shapeFileName}");
         var shapeContent = await GeneralMethods.ReadFileToString(shapeFileName);
         var shape = EditorShapeDeserializer.MakeShapeFromCsv(shapeContent);
 
         Console.WriteLine($"{DateTime.Now:T} Loading tsection.dat");
-        var td = await KujuTsectionParser.LoadTsection(tsectionPath);
+        var td = await KujuTsectionParser.LoadTsection(tsectionPath, skipRoads);
 
         return (shape, td);
     }
 
     private static (bool exists, string pathOnly, string fileName) BuildFfeditPaths(string ffeditLocation)
     {
-        if (File.Exists(ffeditLocation))        
-            return (
-                true,
-                Path.GetDirectoryName(ffeditLocation) + '\\',
-                Path.GetFileName(ffeditLocation)
-            );
+        if (File.Exists(ffeditLocation))
+        {
+            var path = Path.GetDirectoryName(ffeditLocation);
+            if (path == "") path = Directory.GetCurrentDirectory();
+            return (true, path + '\\', Path.GetFileName(ffeditLocation));
+        }
 
         if (ffeditLocation != "")
             Console.WriteLine($"{DateTime.Now:T} WARNING: ffeditc_unicode.exe not found, please compress shapes manually");
@@ -80,15 +85,18 @@ public class BatchConverter
         return (false, "", "");
     }
 
-    private static async Task<(string refFile, string batFile, List<Task> tasks)> CreateShapeConversionTasks(
+    private static async Task<(string refFile, string batFile, List<Task> tasks, int taskCount)> CreateShapeConversionTasks(
         EditorShape shape,
         KujuTsectionDat td,
         string shapesPath,
         string shapeFileNameMask,
+        float gauge,
         int limitCount,
         bool ffeditExists,
         string ffeditPathOnly,
-        string ffeditFileName)
+        string ffeditFileName,
+        bool prohibitVisualObstruction,
+        bool hasWinterTextures)
     {
         var refFile = "SIMISA@@@@@@@@@@JINX0r1t______\r\n\r\n";
         var batFile = "";
@@ -100,10 +108,14 @@ public class BatchConverter
         foreach (var trackShape in td.TrackShapes)
         {
             if (!StringMatchesMask(trackShape.Key, shapeFileNameMask))
-                continue;
+                continue;            
 
             string trackShapeFileName = trackShape.Key;
             var trackShapeSections = trackShape.Value;
+
+            if (gauge > 0 && (trackShapeSections.RoadShape == true || 
+                Math.Abs(td.TrackSections[trackShapeSections.Paths[0].TrackSections[0]].Gauge - gauge) > 1e-3))
+                continue;
 
             var sb = new StringBuilder();
             KujuShapeBuilder.GetRefFileEntry(trackShapeFileName, shape.ShapeName).PrintBlock(sb);
@@ -118,7 +130,8 @@ public class BatchConverter
                 {
                     await ReplicateShapeTask(shape, trackShapeSections, td,
                         shapesPath, trackShapeFileName,
-                        ffeditExists, ffeditPathOnly, ffeditFileName);
+                        ffeditExists, ffeditPathOnly, ffeditFileName,
+                        prohibitVisualObstruction, hasWinterTextures);
                 }
                 finally
                 {
@@ -134,17 +147,17 @@ public class BatchConverter
                 Console.WriteLine($"{DateTime.Now:T} Created {convertedShapesCount} shapes");
         }
 
-        return (refFile, batFile, tasks);
+        return (refFile, batFile, tasks, convertedShapesCount);
     }
 
-    private static async Task SaveOutputFiles(string refAndBatPath, string shapeName, string refFile, string batFile, bool ffeditExists)
+    private static async Task SaveOutputFiles(string refAndBatPath, string shapeName, string refFile, string batFile, bool ffeditExists, int numTasks)
     {
         Console.WriteLine($"{DateTime.Now:T} Saving .ref and .bat files");
 
         await GeneralMethods.SaveStringToFile(Path.Combine(refAndBatPath, shapeName + ".ref"), refFile, DataFileFormat.UTF16LE);
         await GeneralMethods.SaveStringToFile(Path.Combine(refAndBatPath, shapeName + ".bat"), batFile, DataFileFormat.PlainText);
 
-        Console.WriteLine($"{DateTime.Now:T} All shape generation tasks finished.");
+        Console.WriteLine($"{DateTime.Now:T} {numTasks} shape generation tasks finished.");
         if (!ffeditExists)
             Console.WriteLine($"Execute RefAndBat\\{shapeName}.bat to compress shapes manually.");
     }
@@ -157,12 +170,14 @@ public class BatchConverter
         string trackShapeFileName,
         bool ffeditExists,
         string ffeditPathOnly,
-        string ffeditFileName)
+        string ffeditFileName,
+        bool prohibitVisualObstruction,
+        bool hasWinterTextures)
     {
         var replica = await ShapeReplicator.ReplicatePartsInShape(shape, trackShapeSections, td);
         if (replica.Polygons().Any())
         {
-            var shapeFiles = KujuShapeBuilder.BuildShapeFile(replica);
+            var shapeFiles = KujuShapeBuilder.BuildShapeFile(replica, prohibitVisualObstruction, hasWinterTextures);
 
             await GeneralMethods.SaveStringToFile(shapesPath + trackShapeFileName, shapeFiles.s, DataFileFormat.UTF16LE);
             await GeneralMethods.SaveStringToFile(shapesPath + trackShapeFileName + 'd', shapeFiles.sd, DataFileFormat.UTF16LE);

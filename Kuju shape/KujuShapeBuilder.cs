@@ -14,7 +14,9 @@ namespace ShapeData.Kuju_shape
     {
         private const string newLine = "\r\n";
 
-        public static (string s, string sd) BuildShapeFile(EditorShape shape)
+        public static (string s, string sd) BuildShapeFile(EditorShape shape,
+            bool prohibitVisualObstruction = false,
+            bool hasWinterTextures = false)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
@@ -22,7 +24,8 @@ namespace ShapeData.Kuju_shape
 
             return (
                 AssembleShapeFileParts(shape, prepared),
-                AssembleShapeDefinitionParts(shape.ShapeName, prepared.BoundingBox, true, false)
+                AssembleShapeDefinitionParts(shape.ShapeName, prepared.BoundingBox, 
+                prohibitVisualObstruction, hasWinterTextures)
             );
         }
 
