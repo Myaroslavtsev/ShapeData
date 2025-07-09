@@ -29,14 +29,19 @@ namespace ShapeData.Kuju_tsection.dat
     {        
         public static async Task<KujuTsectionDat> LoadTsection(string fileName, bool skipRoads = true)
         {
-            var tsection = new KujuTsectionDat();
+            var trackSectionsConcurrent = new ConcurrentDictionary<int, KujuTrackSection>();
+            var trackShapesConcurrent = new ConcurrentDictionary<string, KujuTrackShape>();
 
             var filedata = SimplifySpaces(await GeneralMethods.ReadFileToString(fileName));
 
             await Task.WhenAll(
-                Task.Run(() => ParseSectionsParallel(GetAllTrackSectionBlocks(filedata), tsection, skipRoads)),
-                Task.Run(() => ParseShapesParallel(GetAllTrackShapeBlocks(filedata), tsection, skipRoads))
+                Task.Run(() => ParseSectionsParallel(GetAllTrackSectionBlocks(filedata), trackSectionsConcurrent)),
+                Task.Run(() => ParseShapesParallel(GetAllTrackShapeBlocks(filedata), trackShapesConcurrent, skipRoads))
             );
+
+            var tsection = new KujuTsectionDat(
+                new SortedDictionary<int, KujuTrackSection>(trackSectionsConcurrent), 
+                new SortedDictionary<string, KujuTrackShape>(trackShapesConcurrent));
 
             return tsection;
         }
@@ -83,7 +88,9 @@ namespace ShapeData.Kuju_tsection.dat
             return sb.ToString();
         }
 
-        private static void ParseSectionsParallel(string blockData, KujuTsectionDat tsection, bool skipRoads)
+        private static void ParseSectionsParallel(
+            string blockData, 
+            ConcurrentDictionary<int, KujuTrackSection> sections)
         {
             var cultureInfo = new CultureInfo("en-US");
 
@@ -99,12 +106,15 @@ namespace ShapeData.Kuju_tsection.dat
                     var section = new KujuTrackSection(sectionId.Value);
                     ParseSectionBlocks(dataBlock.Data, section, cultureInfo);
 
-                    tsection.TrackSections.TryAdd(sectionId.Value, section);
+                    sections.TryAdd(sectionId.Value, section);
                 }
             });
         }
 
-        private static void ParseShapesParallel(string blockData, KujuTsectionDat tsection, bool skipRoads)
+        private static void ParseShapesParallel(
+            string blockData, 
+            ConcurrentDictionary<string, KujuTrackShape> shapes, 
+            bool skipRoads)
         {
             var cultureInfo = new CultureInfo("en-US");
 
@@ -121,7 +131,7 @@ namespace ShapeData.Kuju_tsection.dat
                         ParseShapeBlocks(dataBlock.Data, shape, cultureInfo);
 
                         if (!(skipRoads && shape.RoadShape))
-                            tsection.TrackShapes.TryAdd(shape.FileName, shape);
+                            shapes.TryAdd(shape.FileName, shape);
                     }                    
                 }
             });

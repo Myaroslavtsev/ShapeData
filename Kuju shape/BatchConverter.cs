@@ -24,7 +24,9 @@ namespace ShapeData.Kuju_shape
             int limitCount = 0)
         {
             string shapesPath = Directory.GetCurrentDirectory() + "\\Shapes\\";
+            string refAndBatPath = Directory.GetCurrentDirectory() + "\\RefAndBat\\";
             Directory.CreateDirectory(shapesPath);
+            Directory.CreateDirectory(refAndBatPath);
 
             Console.WriteLine($"{DateTime.Now:T} Loading shape from {shapeFileName}");
             var shape = EditorShapeDeserializer.MakeShapeFromCsv(await GeneralMethods.ReadFileToString(shapeFileName));
@@ -75,15 +77,15 @@ namespace ShapeData.Kuju_shape
                     if (limitCount > 0 && convertedShapesCount >= limitCount) break;
 
                     if (convertedShapesCount % 100 == 0)
-                        Console.WriteLine($"{DateTime.Now:T} Converted {convertedShapesCount} shapes");
+                        Console.WriteLine($"{DateTime.Now:T} Created {convertedShapesCount} shapes");
                 }
             }
 
             await Task.WhenAll(tasks);
 
             Console.WriteLine($"{DateTime.Now:T} Saving .ref and .bat files");
-            await GeneralMethods.SaveStringToFile(shape.ShapeName + ".ref", refFile, DataFileFormat.UTF16LE);
-            await GeneralMethods.SaveStringToFile(shape.ShapeName + ".bat", batFile, DataFileFormat.PlainText);
+            await GeneralMethods.SaveStringToFile(refAndBatPath + shape.ShapeName + ".ref", refFile, DataFileFormat.UTF16LE);
+            await GeneralMethods.SaveStringToFile(refAndBatPath + shape.ShapeName + ".bat", batFile, DataFileFormat.PlainText);
 
             Console.WriteLine($"{DateTime.Now:T} All shape generation tasks finished. Execute .bat to compress shapes.");
         }

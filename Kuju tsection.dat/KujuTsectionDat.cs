@@ -7,16 +7,22 @@ namespace ShapeData
 {
     public class KujuTsectionDat
     {
-        public ConcurrentDictionary<int, KujuTrackSection> TrackSections => trackSections;
-        public ConcurrentDictionary<string, KujuTrackShape> TrackShapes => trackShapes;
+        public SortedDictionary<int, KujuTrackSection> TrackSections => trackSections;
+        public SortedDictionary<string, KujuTrackShape> TrackShapes => trackShapes;
 
-        private ConcurrentDictionary<int, KujuTrackSection> trackSections { get; }
-        private ConcurrentDictionary<string, KujuTrackShape> trackShapes { get; }
+        private SortedDictionary<int, KujuTrackSection> trackSections { get; }
+        private SortedDictionary<string, KujuTrackShape> trackShapes { get; }
+
+        public KujuTsectionDat(SortedDictionary<int, KujuTrackSection> sections, SortedDictionary<string, KujuTrackShape> shapes)
+        {
+            trackSections = sections;
+            trackShapes = shapes;
+        }
 
         public KujuTsectionDat()
         {
-            trackSections = new ConcurrentDictionary<int, KujuTrackSection>();
-            trackShapes = new ConcurrentDictionary<string, KujuTrackShape>();
+            trackSections = new SortedDictionary<int, KujuTrackSection>();
+            trackShapes = new SortedDictionary<string, KujuTrackShape>();
         }
     }
 }
