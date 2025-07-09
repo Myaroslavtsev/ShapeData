@@ -24,17 +24,17 @@ namespace ShapeData.Kuju_shape
         {            
             string shapesPath = Directory.GetCurrentDirectory() + "\\Shapes\\";
             Directory.CreateDirectory(shapesPath);
-            
-            Console.WriteLine("Loading shape from " + shapeFileName);
+
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Loading shape from " + shapeFileName);
             var shape = EditorShapeDeserializer.MakeShapeFromCsv(await GeneralMethods.ReadFileToString(shapeFileName));
 
-            Console.WriteLine("Loading tsection.dat");
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Loading tsection.dat");
             var td = await KujuTsectionParser.LoadTsection(tsectionPath);
 
             var refFile = "SIMISA@@@@@@@@@@JINX0r1t______" + "\r\n" + "\r\n";
             var batFile = "";
 
-            Console.WriteLine("Generating conversion tasks");
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Generating conversion tasks");
             var conversionTasks = new List<(Task task, string taskName)>();
 
             int convertedShapesCount = 0;
@@ -64,14 +64,14 @@ namespace ShapeData.Kuju_shape
                 }                
             }
 
-            Console.WriteLine("Saving .ref and .bat files");
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Saving .ref and .bat files");
             await GeneralMethods.SaveStringToFile(shape.ShapeName + ".ref", refFile, DataFileFormat.UTF16LE);
             await GeneralMethods.SaveStringToFile(shape.ShapeName + ".bat", batFile, DataFileFormat.PlainText);
 
-            Console.WriteLine("Starting shape generation");
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "Starting shape generation");
             await GeneralMethods.RunTasksInParallel(conversionTasks, 16);
 
-            Console.WriteLine("All shape generation tasks finished. Execute .bat to compress shapes.");
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " " + "All shape generation tasks finished. Execute .bat to compress shapes.");
         }
 
         private static bool StringMatchesMask(string filename, string mask)

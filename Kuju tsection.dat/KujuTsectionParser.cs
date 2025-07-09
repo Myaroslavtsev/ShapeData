@@ -2,7 +2,10 @@
 
 using System;
 using System.Globalization;
+using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace ShapeData.Kuju_tsection.dat
 {
@@ -23,80 +26,146 @@ namespace ShapeData.Kuju_tsection.dat
     }
 
     class KujuTsectionParser
-    {
+    {        
         public static async Task<KujuTsectionDat> LoadTsection(string fileName, bool skipRoads = true)
         {
             var tsection = new KujuTsectionDat();
 
             var filedata = SimplifySpaces(await GeneralMethods.ReadFileToString(fileName));
 
-            ParseShapesAndSections(GetAllTrackSectionBlocks(filedata), tsection, skipRoads);
-
-            ParseShapesAndSections(GetAllTrackShapeBlocks(filedata), tsection, skipRoads);
+            await Task.WhenAll(
+                Task.Run(() => ParseSectionsParallel(GetAllTrackSectionBlocks(filedata), tsection, skipRoads)),
+                Task.Run(() => ParseShapesParallel(GetAllTrackShapeBlocks(filedata), tsection, skipRoads))
+            );
 
             return tsection;
         }
 
-        private static string SimplifySpaces(string data)
+        private static string SimplifySpaces(string input)
         {
-            while (data.IndexOf("  ") > -1)
+            var sb = new StringBuilder(input.Length);
+            var span = input.AsSpan();
+
+            int lineStart = 0;
+            while (lineStart < span.Length)
             {
-                data = data.Replace("  ", " ");
+                int lineEnd = span.Slice(lineStart).IndexOf("\r\n") switch
+                {
+                    -1 => span.Length,
+                    int rel => lineStart + rel
+                };
+
+                var line = span.Slice(lineStart, lineEnd - lineStart).TrimStart();
+
+                bool prevSpace = false;
+                foreach (var c in line)
+                {
+                    if (c == ' ')
+                    {
+                        if (!prevSpace)
+                        {
+                            sb.Append(' ');
+                            prevSpace = true;
+                        }
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                        prevSpace = false;
+                    }
+                }
+
+                sb.Append("\r\n");
+
+                lineStart = lineEnd + 2; // Skip "\r\n"
             }
 
-            return data;
+            return sb.ToString();
         }
 
-        private static void ParseShapesAndSections(string trackSections, KujuTsectionDat tsection, bool skipRoads)
+        private static void ParseSectionsParallel(string blockData, KujuTsectionDat tsection, bool skipRoads)
         {
-            int blockStart = 0;
-            var dataBlock = GetDataBlock(trackSections, blockStart);
+            var cultureInfo = new CultureInfo("en-US");
 
-            while (dataBlock.BlockEnd != -1)
+            var dataBlocks = ExtractDataBlocks(blockData);
+
+            Parallel.ForEach(dataBlocks, dataBlock =>
             {
                 if (dataBlock.Caption == "TrackSection")
-                    ParseOneTrackSection(dataBlock.Data, tsection);
+                {
+                    var sectionId = ParseSectionId(dataBlock.Data);
+                    if (sectionId == null) return;
 
-                if (dataBlock.Caption == "TrackShape")
-                    ParseOneTrackShape(dataBlock.Data, tsection, skipRoads);
+                    var section = new KujuTrackSection(sectionId.Value);
+                    ParseSectionBlocks(dataBlock.Data, section, cultureInfo);
 
-                blockStart = dataBlock.BlockEnd;
-                dataBlock = GetDataBlock(trackSections, blockStart);
-            }
+                    tsection.TrackSections.TryAdd(sectionId.Value, section);
+                }
+            });
         }
 
-        private static void ParseOneTrackShape(string data, KujuTsectionDat tsection, bool skipRoads)
+        private static void ParseShapesParallel(string blockData, KujuTsectionDat tsection, bool skipRoads)
         {
-            var sectionId = ParseSectionId(data);
-            if (sectionId == null) return;
+            var cultureInfo = new CultureInfo("en-US");
 
-            var shape = new KujuTrackShape();
+            var dataBlocks = ExtractDataBlocks(blockData);
 
-            ParseShapeBlocks(data, shape);
+            Parallel.ForEach(dataBlocks, dataBlock =>
+            {
+                if (dataBlock.Caption == "TrackShape")
+                {
+                    var sectionId = ParseSectionId(dataBlock.Data);
+                    if (sectionId != null)
+                    {
+                        var shape = new KujuTrackShape();
+                        ParseShapeBlocks(dataBlock.Data, shape, cultureInfo);
 
-            if (!tsection.TrackShapes.ContainsKey(shape.FileName) &&
-                !(skipRoads && shape.RoadShape))
-                tsection.TrackShapes.Add(shape.FileName, shape);
+                        if (!(skipRoads && shape.RoadShape))
+                            tsection.TrackShapes.TryAdd(shape.FileName, shape);
+                    }                    
+                }
+            });
         }
 
-        private static void ParseShapeBlocks(string data, KujuTrackShape shape)
+        private static List<TsectionDataBlock> ExtractDataBlocks(string blockData)
+        {
+            var blocks = new List<TsectionDataBlock>();
+            int blockStart = 0;
+            TsectionDataBlock dataBlock;
+
+            do
+            {
+                dataBlock = GetDataBlock(blockData, blockStart);
+                if (dataBlock.BlockEnd != -1)
+                {
+                    blocks.Add(dataBlock);
+                    blockStart = dataBlock.BlockEnd;
+                }
+            } while (dataBlock.BlockEnd != -1);
+
+            return blocks;
+        }
+
+        private static void ParseShapeBlocks(string data, KujuTrackShape shape, CultureInfo cultureInfo)
         {
             int blockStart = 0;
-            var dataBlock = GetDataBlock(data, blockStart);
+            TsectionDataBlock dataBlock = GetDataBlock(data, blockStart);
 
             while (dataBlock.BlockEnd != -1)
             {
-                switch (dataBlock.Caption.ToLower())
+                var captionSpan = dataBlock.Caption.AsSpan();
+
+                if (captionSpan.Equals("filename".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
-                    case "filename":
-                        shape.Rename(dataBlock.Data);
-                        break;
-                    case "sectionidx":
-                        ParseSectionIdx(dataBlock.Data, shape, new CultureInfo("en-US"));
-                        break;
-                    case "roadshape":
-                        shape.RoadShape = true;
-                        break;
+                    shape.Rename(dataBlock.Data);
+                }
+                else if (captionSpan.Equals("sectionidx".AsSpan(), StringComparison.OrdinalIgnoreCase))
+                {
+                    ParseSectionIdx(dataBlock.Data, shape, cultureInfo);
+                }
+                else if (captionSpan.Equals("roadshape".AsSpan(), StringComparison.OrdinalIgnoreCase))
+                {
+                    shape.RoadShape = true;
                 }
 
                 blockStart = dataBlock.BlockEnd;
@@ -106,70 +175,73 @@ namespace ShapeData.Kuju_tsection.dat
 
         private static void ParseSectionIdx(string data, KujuTrackShape shape, CultureInfo cultureInfo)
         {
-            var values = data.Split(" ");
-            if (values.Length >= 6)
+            var span = data.AsSpan();
+            var path = new KujuTrackPath();
+
+            // Пропустить первый элемент (обычно "0")
+            int idx = span.IndexOf(' ');
+            if (idx == -1 || idx + 1 >= span.Length) return;
+            span = span.Slice(idx + 1);
+
+            // Далее: dX, dY, dZ, dA
+            if (!TryReadDouble(ref span, out double dX, cultureInfo)) return;
+            if (!TryReadDouble(ref span, out double dY, cultureInfo)) return;
+            if (!TryReadDouble(ref span, out double dZ, cultureInfo)) return;
+            if (!TryReadDouble(ref span, out double dA, cultureInfo)) return;
+
+            // Остальные — int ID
+            while (!span.IsEmpty)
             {
-                var path = new KujuTrackPath();
-
-                if (!double.TryParse(values[1], NumberStyles.Any, cultureInfo, out double dX)) return;
-                if (!double.TryParse(values[2], NumberStyles.Any, cultureInfo, out double dY)) return;
-                if (!double.TryParse(values[3], NumberStyles.Any, cultureInfo, out double dZ)) return;
-                if (!double.TryParse(values[4], NumberStyles.Any, cultureInfo, out double dA)) return;
-
-                for (int i = 5; i < values.Length; i++)
-                {
-                    if (!int.TryParse(values[i], out int id)) return;
-                    path.TrackSections.Add(id);
-                }
-
-                path.Direction.X = dX;
-                path.Direction.Y = dY;
-                path.Direction.Z = dZ;
-                path.Direction.A = dA;
-
-                shape.Paths.Add(path);
+                if (!TryReadInt(ref span, out int id)) return;
+                path.TrackSections.Add(id);
             }
-        }
 
-        private static void ParseOneTrackSection(string data, KujuTsectionDat tsection)
-        {
-            var sectionId = ParseSectionId(data);
-            if (sectionId == null) return;
+            path.Direction.X = dX;
+            path.Direction.Y = dY;
+            path.Direction.Z = dZ;
+            path.Direction.A = dA;
 
-            var section = new KujuTrackSection(sectionId.Value);
-
-            ParseSectionBlocks(data, section);
-
-            if (!tsection.TrackSections.ContainsKey(sectionId.Value))
-                tsection.TrackSections.Add(sectionId.Value, section);
+            shape.Paths.Add(path);
         }
 
         private static int? ParseSectionId(string data)
         {
-            var sectionIdText = data[0..Math.Min(data.IndexOf(" ", 1), data.IndexOf("\r\n", 1))];
+            var span = data.AsSpan();
 
-            if (int.TryParse(sectionIdText.Trim(), out int sectionId))
+            int spaceIdx = span.IndexOf(' ');
+            int newlineIdx = span.IndexOf("\r\n");
+
+            int endIdx = (spaceIdx, newlineIdx) switch
+            {
+                (-1, -1) => span.Length,
+                (_, -1) => spaceIdx,
+                (-1, _) => newlineIdx,
+                _ => Math.Min(spaceIdx, newlineIdx)
+            };
+
+            var idSpan = span.Slice(0, endIdx).Trim();
+            if (int.TryParse(idSpan, out int sectionId))
                 return sectionId;
 
             return null;
         }
 
-        private static void ParseSectionBlocks(string data, KujuTrackSection section)
+        private static void ParseSectionBlocks(string data, KujuTrackSection section, CultureInfo cultureInfo)
         {
-            var cultureInfo = new CultureInfo("en-US");
             int blockStart = 0;
-            var dataBlock = GetDataBlock(data, blockStart);
+            TsectionDataBlock dataBlock = GetDataBlock(data, blockStart);
 
             while (dataBlock.BlockEnd != -1)
             {
-                switch (dataBlock.Caption.ToLower())
+                var captionSpan = dataBlock.Caption.AsSpan();
+
+                if (captionSpan.Equals("sectionsize".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
-                    case "sectionsize":
-                        ParseSectionSize(dataBlock.Data, section, cultureInfo);
-                        break;
-                    case "sectioncurve":
-                        ParseSectionCurve(dataBlock.Data, section, cultureInfo);
-                        break;
+                    ParseSectionSize(dataBlock.Data, section, cultureInfo);
+                }
+                else if (captionSpan.Equals("sectioncurve".AsSpan(), StringComparison.OrdinalIgnoreCase))
+                {
+                    ParseSectionCurve(dataBlock.Data, section, cultureInfo);
                 }
 
                 blockStart = dataBlock.BlockEnd;
@@ -179,26 +251,24 @@ namespace ShapeData.Kuju_tsection.dat
 
         private static void ParseSectionSize(string data, KujuTrackSection section, CultureInfo cultureInfo)
         {
-            var values = data.Split(" ");
-            if (values.Length >= 2)
-            {
-                double.TryParse(values[0], NumberStyles.Any, cultureInfo, out double gauge);
-                double.TryParse(values[1], NumberStyles.Any, cultureInfo, out double straight);
-                section.Gauge = gauge;
-                section.SectionTrajectory.Straight = straight;
-            }
+            var span = data.AsSpan();
+
+            if (!TryReadDouble(ref span, out double gauge, cultureInfo)) return;
+            if (!TryReadDouble(ref span, out double straight, cultureInfo)) return;
+
+            section.Gauge = gauge;
+            section.SectionTrajectory.Straight = straight;
         }
 
         private static void ParseSectionCurve(string data, KujuTrackSection section, CultureInfo cultureInfo)
         {
-            var values = data.Split(" ");
-            if (values.Length >= 2)
-            {
-                double.TryParse(values[0], NumberStyles.Any, cultureInfo, out double radius);
-                double.TryParse(values[1], NumberStyles.Any, cultureInfo, out double angle);
-                section.SectionTrajectory.Radius = radius;
-                section.SectionTrajectory.Angle = angle;
-            }
+            var span = data.AsSpan();
+
+            if (!TryReadDouble(ref span, out double radius, cultureInfo)) return;
+            if (!TryReadDouble(ref span, out double angle, cultureInfo)) return;
+
+            section.SectionTrajectory.Radius = radius;
+            section.SectionTrajectory.Angle = angle;
         }
 
         private static string GetAllTrackSectionBlocks(string tsectionFile)
@@ -226,12 +296,13 @@ namespace ShapeData.Kuju_tsection.dat
             while (true)
             {
                 var dataBlock = GetDataBlock(tsectionFile, blockStart);
-
                 if (dataBlock.BlockEnd == -1)
                     return "";
 
-                if (dataBlock.Caption == "TrackShapes")
-                    return dataBlock.Data;
+                if (dataBlock.Caption.Equals("TrackShapes", StringComparison.OrdinalIgnoreCase))
+                {
+                    return dataBlock.Data; // этот блок содержит много TrackShape
+                }
 
                 blockStart = dataBlock.BlockEnd;
             }
@@ -239,57 +310,95 @@ namespace ShapeData.Kuju_tsection.dat
 
         private static TsectionDataBlock GetDataBlock(string file, int startPos)
         {
-            var (blockName, bracketPos) = FindDataBloskStart(file, startPos);
-            if (bracketPos < 0)
-                return new TsectionDataBlock("", "", -1);
+            int cursor = startPos;
 
-            var endPos = FindDataBlockEnd(file, bracketPos);
+            while (cursor < file.Length)
+            {
+                // 1. Найти начало строки
+                int lineEnd = file.IndexOf("\r\n", cursor, StringComparison.OrdinalIgnoreCase);
+                if (lineEnd == -1) lineEnd = file.Length;
 
-            if (endPos > bracketPos)
-                return new TsectionDataBlock(blockName.Trim(),
-                    file[(bracketPos + 1)..(endPos - 1)].Trim(),
-                    endPos);
+                var line = file.AsSpan(cursor, lineEnd - cursor);
+
+                // 2. Найти открывающую скобку
+                int openBracketPos = line.IndexOf('(');
+                if (openBracketPos >= 0)
+                {
+                    var caption = line[..openBracketPos].Trim().ToString();
+                    int globalBracketPos = cursor + openBracketPos;
+
+                    // 3. Найти конец блока начиная с открывающей скобки
+                    int relativeEnd = FindDataBlockEnd(file.AsSpan(globalBracketPos));
+                    if (relativeEnd <= 0)
+                        return new TsectionDataBlock("", "", -1);
+
+                    int globalEnd = globalBracketPos + relativeEnd;
+                    var innerData = file.AsSpan(globalBracketPos + 1, relativeEnd - 2).Trim().ToString();
+
+                    return new TsectionDataBlock(caption, innerData, globalEnd);
+                }
+
+                // 4. Перейти к следующей строке
+                cursor = lineEnd + 2;
+            }
 
             return new TsectionDataBlock("", "", -1);
         }
 
-        private static (string blockName, int bracketPos) FindDataBloskStart(string file, int startPos)
+        private static int FindDataBlockEnd(ReadOnlySpan<char> span)
         {
-            int lineStartPos = file.IndexOf("\r\n", startPos, StringComparison.OrdinalIgnoreCase);
-
-            while (lineStartPos < file.Length && lineStartPos >= 0)
+            int depth = 1;
+            for (int i = 1; i < span.Length; i++)
             {
-                var lineEndPos = file.IndexOf("\r\n", lineStartPos + 1, StringComparison.OrdinalIgnoreCase);
-
-                if (lineEndPos < 0)
-                    lineEndPos = file.Length;
-
-                var bracketPos = file.IndexOf('(', lineStartPos, lineEndPos - lineStartPos);
-
-                if (bracketPos > lineStartPos)
-                    return (file.Substring(lineStartPos + 2, bracketPos - lineStartPos - 2).TrimEnd(), bracketPos);
-
-                lineStartPos = lineEndPos;
+                if (span[i] == '(') depth++;
+                else if (span[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0)
+                        return i + 1;
+                }
             }
-
-            return ("", -1);
+            return -1;
         }
 
-        private static int FindDataBlockEnd(string file, int bracketPos)
+        private static bool TryReadDouble(ref ReadOnlySpan<char> span, out double value, CultureInfo cultureInfo)
         {
-            var bracketCount = 1;
+            span = span.TrimStart();
+            int nextSpace = span.IndexOf(' ');
+            ReadOnlySpan<char> token;
 
-            while (bracketPos++ < file.Length && bracketCount > 0)
+            if (nextSpace == -1)
             {
-                if (file[bracketPos] == '(')
-                    bracketCount++;
-
-                if (file[bracketPos] == ')')
-                    bracketCount--;
+                token = span;
+                span = ReadOnlySpan<char>.Empty;
+            }
+            else
+            {
+                token = span.Slice(0, nextSpace);
+                span = span.Slice(nextSpace + 1);
             }
 
-            return bracketPos;
+            return double.TryParse(token, NumberStyles.Any, cultureInfo, out value);
         }
 
+        private static bool TryReadInt(ref ReadOnlySpan<char> span, out int value)
+        {
+            span = span.TrimStart();
+            int nextSpace = span.IndexOf(' ');
+            ReadOnlySpan<char> token;
+
+            if (nextSpace == -1)
+            {
+                token = span;
+                span = ReadOnlySpan<char>.Empty;
+            }
+            else
+            {
+                token = span.Slice(0, nextSpace);
+                span = span.Slice(nextSpace + 1);
+            }
+
+            return int.TryParse(token, out value);
+        }
     }
 }
