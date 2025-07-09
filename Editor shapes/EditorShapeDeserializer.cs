@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ShapeData
 {
-    class EditorShapeDeserializer
+    public class EditorShapeDeserializer
     {
         public static EditorShape MakeShapeFromCsv(string csvData) =>
             GetShapeFromCells(SplitCsvToCells(csvData));

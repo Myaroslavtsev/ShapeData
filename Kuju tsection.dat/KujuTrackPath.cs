@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ShapeData
 {
-    class KujuTrackPath
+    public class KujuTrackPath
     {
         // initial shift in meters and rotation in angles
         public Direction Direction { get; set; }

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ShapeData
 {
-    class KujuTsectionDat
+    public class KujuTsectionDat
     {
         public ConcurrentDictionary<int, KujuTrackSection> TrackSections => trackSections;
         public ConcurrentDictionary<string, KujuTrackShape> TrackShapes => trackShapes;

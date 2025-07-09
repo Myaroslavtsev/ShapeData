@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ShapeData
 {
-    class EditorShapeSerializer
+    public class EditorShapeSerializer
     {
         public static string MakeCsvFromEditorShape(EditorShape shape)
         {

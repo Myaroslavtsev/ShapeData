@@ -4,7 +4,7 @@ using ShapeData.Geometry;
 
 namespace ShapeData
 {
-    class KujuTrackSection
+    public class KujuTrackSection
     {
         public int Id { get; private set; }
         public double Gauge { get; set; }

@@ -25,7 +25,7 @@ namespace ShapeData.Kuju_tsection.dat
         }
     }
 
-    class KujuTsectionParser
+    public class KujuTsectionParser
     {        
         public static async Task<KujuTsectionDat> LoadTsection(string fileName, bool skipRoads = true)
         {

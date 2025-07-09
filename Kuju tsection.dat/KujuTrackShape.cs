@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace ShapeData
 {
-    class KujuTrackShape
+    public class KujuTrackShape
     {
         public string FileName { get; private set; }
         public bool RoadShape { get; set; }

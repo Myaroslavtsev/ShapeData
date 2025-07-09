@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 
 namespace ShapeData.Kuju_shape
 {
-    class BatchConverter
+    public class BatchConverter
     {
         public async static Task ConvertShape(
             string shapeFileName,
