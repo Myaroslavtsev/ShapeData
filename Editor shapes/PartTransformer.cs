@@ -113,8 +113,10 @@ namespace ShapeData.Editor_shapes
                 var transformedPoly = poly.Copy();
 
                 foreach (var v in transformedPoly.Vertices)
+                {
                     v.Position = new(v.Position.X, v.Position.Y, v.Position.Z * scaleFactor);
-
+                }    
+                    
                 scaledPolys.Add(transformedPoly);
             }
 
@@ -181,6 +183,24 @@ namespace ShapeData.Editor_shapes
             }
 
             return newPolygons;
+        }
+
+        private static void ShiftPart(EditorPart part, float dX, float dY, float dZ)
+        {
+            foreach (var v in part.Vertices())
+                v.Position = new Vector3(v.Position.X + dX, v.Position.Y + dY, v.Position.Z + dZ);            
+        }
+
+        private static void FlipPart(EditorPart part, bool flipX, bool flipY, bool flipZ)
+        {
+            foreach (var v in part.Vertices())
+            {
+                var newX = flipX ? -v.Position.X : v.Position.X;
+                var newY = flipY ? -v.Position.Y : v.Position.Y;
+                var newZ = flipZ ? -v.Position.Z : v.Position.Z;
+                
+                v.Position = new Vector3(newX, newY, newZ);
+            }
         }
     }
 }

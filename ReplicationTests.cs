@@ -332,8 +332,8 @@ namespace ShapeData
             return (new Vector2(minX, minZ), new Vector2(maxX, maxZ));
         }
 
-        [TestCase(1)]
-        public async Task BatchConversion(int testParameter,
+        [TestCase()]
+        public async Task BatchConversion(
             PartReplicationMethod repMethod = PartReplicationMethod.ByFixedIntervals,
             PartScalingMethod scaleMethod = PartScalingMethod.FixLength,
             PartStretchInWidthMethod stretchMethod = PartStretchInWidthMethod.ReplicateAlongAllTracks,
