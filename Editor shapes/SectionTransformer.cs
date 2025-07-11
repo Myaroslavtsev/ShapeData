@@ -171,29 +171,29 @@ namespace ShapeData.Editor_shapes
             var sectionLength = section.Traject.Length;
 
             var subdivisionNum = GetSubdivisionNum(replicationData);
+            replicationData.GetReplicationParam("OriginalLength", out var originalLength);
+
+            var subintervalLength = originalLength / subdivisionNum;
 
             switch (replicationData.ReplicationMethod)
             {
                 case PartReplicationMethod.ByFixedIntervals:
                     replicationData.GetReplicationParam("IntervalLength", out var interval);
                     var fixedIntervalLength = interval / subdivisionNum;
-                    var fixedCount = CountSubintervals((float)sectionLength, fixedIntervalLength, 
-                        replicationData.LeaveAtLeastOne);
+                    var fixedCount = CountSubintervals((float)sectionLength, fixedIntervalLength);
                     return (fixedCount, fixedIntervalLength);
 
                 case PartReplicationMethod.ByEvenIntervals:
-                    replicationData.GetReplicationParam("IntervalLength", out var intervalLength);
-                    var stretchedInterval = StretchInterval(intervalLength, sectionLength, subdivisionNum);
-                    var evenCount = CountSubintervals((float)sectionLength, stretchedInterval,
-                        replicationData.LeaveAtLeastOne);
+                    var stretchedInterval = StretchInterval(subintervalLength, sectionLength);
+                    var evenCount = CountSubintervals((float)sectionLength, stretchedInterval);
                     return (evenCount, stretchedInterval);
 
                 case PartReplicationMethod.ByDeflection:
                     replicationData.GetReplicationParam("MaxDeflection", out var deflection);
-                    var deflectionCount = CountSubintervals((float)sectionLength,
-                        StretchInterval(LengthByDeflection(section.Traject, deflection), sectionLength, subdivisionNum),
-                        replicationData.LeaveAtLeastOne);
-                    return (deflectionCount, (float)(sectionLength / deflectionCount));
+                    var stretchedSubinterval = StretchInterval(Math.Min(subintervalLength, 
+                        LengthByDeflection(section.Traject, deflection)), sectionLength);
+                    var deflectionCount = CountSubintervals((float)sectionLength, stretchedSubinterval);
+                    return (deflectionCount, stretchedSubinterval);
 
                 default:
                     return (0, 0);
@@ -212,17 +212,16 @@ namespace ShapeData.Editor_shapes
             return subdivisionNum;
         }
 
-        private static int CountSubintervals(float sectionLength, float intervalLength, bool leaveAtLeastOne)
+        private static int CountSubintervals(float sectionLength, float intervalLength)
         {
             int count = (int)Math.Floor(sectionLength / intervalLength);
 
             return count;
         }
 
-        private static float StretchInterval(double intervalLength, double sectionLength, int subdivisionCount)
+        private static float StretchInterval(double subintervalLength, double sectionLength)
         {
-            var desiredSunibtervalLength = intervalLength / subdivisionCount;
-            var subIntervalCount = Math.Round(sectionLength / desiredSunibtervalLength);
+            var subIntervalCount = Math.Round(sectionLength / subintervalLength);
             return (float)(sectionLength / subIntervalCount);
         }
 

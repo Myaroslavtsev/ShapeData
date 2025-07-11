@@ -178,13 +178,16 @@ namespace ShapeData
             false, false, false, 10, 42, 10.0f, 10.0f, 0f, 0f, TestName = "Even - curved")]
         [TestCase("A1t15_2mStrt.s", PartReplicationMethod.ByEvenIntervals,
             PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
-            false, false, false, 5, 8, 5.0f, 10.0f, 0f, 0f, TestName = "Even - straight long stretched")]
+            false, false, false, 6, 15, 6.0f, 6.0f, 0f, 0f, TestName = "Even - straight long stretched")]
         [TestCase("A1t2_5mStrt.s", PartReplicationMethod.ByEvenIntervals,
             PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
             false, false, false, 10, 2, 10.0f, 10.0f, 0f, 0f, TestName = "Even - straight short stretched")]
         [TestCase("A1t120r20d.s", PartReplicationMethod.ByEvenIntervals,
             PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
             false, false, false, 10, 42, 10.0f, 10.0f, 0f, 0f, TestName = "Even - curved stretched")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByEvenIntervals,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, true, false, 10, 42, 10.0f, 10.0f, 0f, 0f, TestName = "Even - curved stretched bent")]
 
         // Replication by deflection
         [TestCase("A1t10mStrt.s", PartReplicationMethod.ByDeflection,
@@ -196,6 +199,12 @@ namespace ShapeData
         [TestCase("A1t120r20d.s", PartReplicationMethod.ByDeflection,
             PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
             false, false, false, 1, 1, 1.0f, 0, 20.0f, 0f, TestName = "Deflection - too large")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByDeflection,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, false, false, 10, 42, 10.0f, 10.0f, 0.01f, 0f, TestName = "Deflection - curved small subintervals")]
+        [TestCase("A1t120r20d.s", PartReplicationMethod.ByDeflection,
+            PartScalingMethod.Stretch, PartStretchInWidthMethod.ReplicateAlongAllTracks,
+            false, true, false, 10, 42, 10.0f, 10.0f, 0.01f, 0f, TestName = "Deflection - curved small subintervals bent")]
 
         public async Task ShapeReplicationPartQuantityTest(
             string shapeName,

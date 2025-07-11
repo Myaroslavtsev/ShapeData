@@ -130,8 +130,7 @@ namespace ShapeData
 
         private IEnumerable<string> GetReplicationParamNames()
         {
-            if (ReplicationMethod == PartReplicationMethod.ByFixedIntervals ||
-                ReplicationMethod == PartReplicationMethod.ByEvenIntervals)
+            if (ReplicationMethod == PartReplicationMethod.ByFixedIntervals)
                 yield return "IntervalLength";
 
             if (ReplicationMethod == PartReplicationMethod.ByDeflection)
