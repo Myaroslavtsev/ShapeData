@@ -88,8 +88,8 @@ namespace ShapeData.Editor_shapes
                     break;
 
                 case PartScalingMethod.Stretch:
-                    segments.typicalSegment = StretchPolys(part.Polygons, newSections.scaleFactor);
-                    segments.finalSegment = TrimPolys(StretchPolys(part.Polygons, newSections.scaleFactor), 
+                    segments.typicalSegment = StretchPolys(part.Polygons, newSections.scaleFactor, part.Replication.ScaleTexture);
+                    segments.finalSegment = TrimPolys(StretchPolys(part.Polygons, newSections.scaleFactor, part.Replication.ScaleTexture), 
                         newSections.finalSection, part.Replication.ScaleTexture);
                     break;
             }
@@ -98,7 +98,7 @@ namespace ShapeData.Editor_shapes
                 BendPolys(segments.finalSegment, newSections.finalSection, part.Replication.BendPart));
         }
 
-        private static List<EditorPolygon> StretchPolys(List<EditorPolygon> polygons, float scaleFactor)
+        private static List<EditorPolygon> StretchPolys(List<EditorPolygon> polygons, float scaleFactor, bool scaleTexture)
         {
             if (polygons is null)
                 return null;
@@ -115,6 +115,8 @@ namespace ShapeData.Editor_shapes
                 foreach (var v in transformedPoly.Vertices)
                 {
                     v.Position = new(v.Position.X, v.Position.Y, v.Position.Z * scaleFactor);
+                    if (scaleTexture)
+                        v.UvPosition = new(v.UvPosition.X, v.UvPosition.Y * scaleFactor);
                 }    
                     
                 scaledPolys.Add(transformedPoly);
@@ -173,8 +175,7 @@ namespace ShapeData.Editor_shapes
                 {
                     if (v.Position.Z > maxZ)
                     {
-                        if (!scaleTexture)
-                            v.UvPosition = new Vector2(v.UvPosition.X, (float)(v.UvPosition.Y * v.Position.Z / maxZ));
+                        v.UvPosition = new Vector2(v.UvPosition.X, (float)(v.UvPosition.Y * v.Position.Z / maxZ));
                         v.Position = new Vector3(v.Position.X, v.Position.Y, (float)maxZ);
                     }
                 }
