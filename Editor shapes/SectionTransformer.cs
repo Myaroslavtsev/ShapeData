@@ -25,7 +25,7 @@ namespace ShapeData.Editor_shapes
 
     class SectionTransformer
     {
-        public static (List<EditorTrackSection>, EditorTrackSection, float) 
+        public static (List<EditorTrackSection>, EditorTrackSection, float, float) 
             SplitTrackSectionInSubsections(EditorTrackSection section, PartReplication replicationData)
         {
             replicationData.GetReplicationParam("OriginalLength", out var originalLength);
@@ -34,30 +34,33 @@ namespace ShapeData.Editor_shapes
             return replicationData.ReplicationMethod switch
             {
                 PartReplicationMethod.ByFixedIntervals or PartReplicationMethod.ByEvenIntervals or PartReplicationMethod.ByDeflection =>
-                    MakeSubsectionList4(section, replicationData),
+                    MakeSubsectionList(section, replicationData),
 
                 PartReplicationMethod.AtFixedPos => (new List<EditorTrackSection> {
-                    new EditorTrackSection(section.StartDirection, partTraject)}, null, 1),
+                    new EditorTrackSection(section.StartDirection, partTraject)}, null, 1, 1),
 
                 PartReplicationMethod.AtTheEnd => (new List<EditorTrackSection> {
-                    new EditorTrackSection(section.EndDirection, partTraject) }, null, 1),
+                    new EditorTrackSection(section.EndDirection, partTraject) }, null, 1, 1),
 
                 _ => (new List<EditorTrackSection> {
-                    new EditorTrackSection(section.StartDirection, partTraject)}, null, 1)
+                    new EditorTrackSection(section.StartDirection, partTraject)}, null, 1, 1)
             };
         }
 
-        private static (List<EditorTrackSection>, EditorTrackSection, float) MakeSubsectionList4(
+        private static (List<EditorTrackSection>, EditorTrackSection, float, float) MakeSubsectionList(
             EditorTrackSection section,
             PartReplication replicationData)
         {
+            var allowOneSegmentStraights = replicationData.ReplicationMethod == PartReplicationMethod.ByDeflection;
+
             var replicationParams = ExtractReplicationParameters(replicationData);
 
             var subIntervals = GetSubIntervalCountAndLength(section, replicationData);
 
             var startDirection = ShiftStartDirection(section.Traject, section.StartDirection, replicationParams.InitialShift);
 
-            var mainSections = GenerateMainSections(section.Traject, startDirection, subIntervals, replicationParams);
+            var mainSections = GenerateMainSections(section.Traject, startDirection, subIntervals, replicationParams,
+                allowOneSegmentStraights);
 
             var lastDirection = startDirection;
             if (mainSections.Count > 0)
@@ -71,8 +74,23 @@ namespace ShapeData.Editor_shapes
                     ChangeTrajectLength(section.Traject, replicationParams.OriginalLength / replicationParams.SubdivisionNum));
 
             var scaleFactor = subIntervals.Length * replicationParams.SubdivisionNum / replicationParams.OriginalLength;
+            var textureScale = 1f;
+            if (allowOneSegmentStraights && section.Traject.Radius == 0)
+            {
+                
 
-            return (mainSections, lastSection, scaleFactor);
+                //var subintervalScale = subIntervals.Length / (replicationParams.OriginalLength / replicationParams.SubdivisionNum);
+                //scaleFactor = subintervalScale * subIntervals.Count / replicationParams.SubdivisionNum;
+                
+                //var grossintervalCount = (int)Math.Ceiling((float)subIntervals.Count / replicationParams.SubdivisionNum);
+                //scaleFactor = grossintervalCount * subintervalScale;
+
+                textureScale = (float)subIntervals.Count / replicationParams.SubdivisionNum;
+
+                scaleFactor = (float)(section.Traject.Length / replicationParams.OriginalLength);
+            }
+
+            return (mainSections, lastSection, scaleFactor, textureScale);
         }
 
         private static EditorTrackSection GenerateLastSection(
@@ -105,8 +123,12 @@ namespace ShapeData.Editor_shapes
             Trajectory traject,
             Direction startDirection,
             (int Count, float Length) subIntervals,
-            ReplicationParams replicationParams)
+            ReplicationParams replicationParams,
+            bool allowOneSegmentStraights)
         {
+            if (traject.Radius == 0 && allowOneSegmentStraights)
+                return new List<EditorTrackSection>();
+
             var mainTraject = ChangeTrajectLength(traject, subIntervals.Length * replicationParams.SubdivisionNum);
 
             var mainSectionCount = subIntervals.Count / replicationParams.SubdivisionNum; // integer division is floored automatically
@@ -180,20 +202,23 @@ namespace ShapeData.Editor_shapes
                 case PartReplicationMethod.ByFixedIntervals:
                     replicationData.GetReplicationParam("IntervalLength", out var interval);
                     var fixedIntervalLength = interval / subdivisionNum;
-                    var fixedCount = CountSubintervals((float)sectionLength, fixedIntervalLength);
+                    var fixedCount = CountSubintervals(sectionLength, fixedIntervalLength);
                     return (fixedCount, fixedIntervalLength);
 
                 case PartReplicationMethod.ByEvenIntervals:
-                    var stretchedInterval = StretchInterval(subintervalLength, sectionLength);
-                    var evenCount = CountSubintervals((float)sectionLength, stretchedInterval);
-                    return (evenCount, stretchedInterval);
+                    return StretchInterval(subintervalLength, sectionLength);
+                //var stretchedInterval = 
+                //var evenCount = CountSubintervals(sectionLength, stretchedInterval);
+                //return (evenCount, stretchedInterval);
 
                 case PartReplicationMethod.ByDeflection:
                     replicationData.GetReplicationParam("MaxDeflection", out var deflection);
-                    var stretchedSubinterval = StretchInterval(Math.Min(subintervalLength, 
-                        LengthByDeflection(section.Traject, deflection)), sectionLength);
-                    var deflectionCount = CountSubintervals((float)sectionLength, stretchedSubinterval);
-                    return (deflectionCount, stretchedSubinterval);
+                    var lengthByDeflection = LengthByDeflection(section.Traject, deflection);
+                    var subLen = Math.Min(subintervalLength, lengthByDeflection);
+                    return StretchInterval(subLen, sectionLength);
+                    //var stretchedSubinterval = 
+                    //var deflectionCount = CountSubintervals(sectionLength, stretchedSubinterval);
+                    //return (deflectionCount, stretchedSubinterval);
 
                 default:
                     return (0, 0);
@@ -212,17 +237,17 @@ namespace ShapeData.Editor_shapes
             return subdivisionNum;
         }
 
-        private static int CountSubintervals(float sectionLength, float intervalLength)
+        private static int CountSubintervals(double sectionLength, float intervalLength)
         {
             int count = (int)Math.Floor(sectionLength / intervalLength);
 
             return count;
         }
 
-        private static float StretchInterval(double subintervalLength, double sectionLength)
+        private static (int, float) StretchInterval(double subintervalLength, double sectionLength)
         {
             var subIntervalCount = Math.Round(sectionLength / subintervalLength);
-            return (float)(sectionLength / subIntervalCount);
+            return ((int)subIntervalCount, (float)(sectionLength / subIntervalCount));
         }
 
         private static double LengthByDeflection(Trajectory trajectory, float deflection)

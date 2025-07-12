@@ -322,7 +322,7 @@ namespace ShapeData.Kuju_shape
         {
             // implemented correctly for non-animated objects only
             // difference between Square, Box, Polygon matrices unknown but may be crucial
-            var matrix = new DataBlock("matrix Box ", new List<string> { "1 0 0 0 1 0 0 0 1 0 0 0" });
+            var matrix = new DataBlock("matrix Box", new List<string> { "1 0 0 0 1 0 0 0 1 0 0 0" });
 
             return new DataBlock("matrices", new List<string> { "1" }, new List<DataBlock> { matrix });
         }
@@ -347,9 +347,9 @@ namespace ShapeData.Kuju_shape
             var delta = bb.maxPoint - bb.minPoint;
 
             var vector = new DataBlock("vector", new List<string> {
-                            (0.5 * sum.X).ToString(), (0.5 * sum.Y).ToString(), (0.5 * sum.Z).ToString()
+                            (0.5f * sum.X).ToString(), (0.5f * sum.Y).ToString(), (0.5f * sum.Z).ToString()
                         }, null, new List<string> {
-                            ((float)(0.5 * delta.Length())).ToString()
+                            ((float)(0.5f * delta.Length())).ToString()
                         });
 
             var vol_sphere = new DataBlock("vol_sphere", null, new List<DataBlock> { vector });

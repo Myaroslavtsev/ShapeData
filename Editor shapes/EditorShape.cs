@@ -41,7 +41,7 @@ namespace ShapeData
         public EditorShape(string shapeName)
         {
             ShapeName = shapeName;
-            Lods = new List<EditorLod> { new EditorLod(2000) };
+            Lods = new List<EditorLod>();
         }
 
         public EditorLod AddLod(EditorLod lod)

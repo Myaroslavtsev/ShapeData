@@ -50,12 +50,13 @@ namespace ShapeData
         public EditorPart Copy(bool clearReplicationParams)
         {
             var copy = clearReplicationParams ?
-                new EditorPart(PartName, PartReplication.NoReplication(), Smoothed) :
-                new EditorPart(PartName, Replication, Smoothed);
+                new EditorPart(PartName + 'C', PartReplication.NoReplication(), Smoothed) :
+                new EditorPart(PartName + 'C', Replication, Smoothed);
 
             foreach (var polygon in polygons)
             {
-                copy.AddPolygon(polygon.Copy());
+                var p = polygon.Copy();
+                copy.AddPolygon(p);
             }
 
             return copy;
