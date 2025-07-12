@@ -88,13 +88,10 @@ namespace ShapeData
 
         private static Material ParseMaterialName(string materialName)
         {
-            foreach (Material material in Enum.GetValues(typeof(Material)))
-            {
-                if (material.ToString() == materialName.ToLower())
-                    return material;
-            }
+            if (!Enum.TryParse<Material>(materialName, ignoreCase: true, out var material))
+                material = Material.SolidNorm;
 
-            return Material.SolidNorm;
+            return material;
         }
 
         private static EditorPart GetPartFromLine(List<string> line)
@@ -121,7 +118,7 @@ namespace ShapeData
             if (!Enum.TryParse<PartScalingMethod>(line[5], ignoreCase: true, out var scalingMethod))
                 scalingMethod = PartScalingMethod.FixLength;
 
-            var scaleTexture = line[6].ToLower() == "scaletexture";
+            var preserveTextureDimension = line[6].ToLower() == "preservetexturedimension";
             var bendPart = line[7].ToLower() == "bendpart";
             var leaveAtLeastOne = line[8].ToLower() == "leaveatleastone";
 
@@ -136,7 +133,7 @@ namespace ShapeData
             }            
 
             return new PartReplication(replicationMethod, scalingMethod, stretchInWidthMethod, 
-                scaleTexture, bendPart, leaveAtLeastOne, replicationParams);
+                preserveTextureDimension, bendPart, leaveAtLeastOne, replicationParams);
         }
 
         private static EditorLod GetLodFromLine(List<string> line)

@@ -211,7 +211,7 @@ namespace ShapeData
             PartReplicationMethod repMethod,
             PartScalingMethod scaleMethod,
             PartStretchInWidthMethod stretchMethod,
-            bool scaleTexture, bool bendPart, bool leaveOne,
+            bool preserveTextureDimension, bool bendPart, bool leaveOne,
             int subdivisionCount,
             int replicaCount,
             float originalLength = 1,
@@ -222,6 +222,7 @@ namespace ShapeData
             var td = await GetTsectionDat();
 
             var shape = new EditorShape(TestContext.CurrentContext.Test.Name);
+            shape.AddLod(new EditorLod(2000));
 
             var repParams = new Dictionary<string, float>
             {
@@ -233,7 +234,7 @@ namespace ShapeData
             };
 
             var part = shape.Lods[0].AddPart(new EditorPart("Plane",
-                new PartReplication(repMethod, scaleMethod, stretchMethod, scaleTexture, bendPart, leaveOne, repParams)));
+                new PartReplication(repMethod, scaleMethod, stretchMethod, preserveTextureDimension, bendPart, leaveOne, repParams)));
 
             for (int i = 0; i < Math.Max(1, subdivisionCount); i++)
                 part.AddPolygon(new EditorPolygon(
@@ -363,6 +364,7 @@ namespace ShapeData
                 { "InitialShift".ToLower(), initialShift }
             };
 
+            shape.AddLod(new EditorLod(2000));
             var part = shape.Lods[0].AddPart(new EditorPart("Plane",
                 new PartReplication(repMethod, scaleMethod, stretchMethod, false, false, false, repParams)));
 

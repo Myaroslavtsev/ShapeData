@@ -87,7 +87,7 @@ namespace ShapeData
                 rep.StretchInWidthMethod.ToString() + ';' +
                 rep.ScalingMethod.ToString() + ';';
 
-            dataString += rep.ScaleTexture? "ScaleTexture;" : "NotScaleTexture;";
+            dataString += rep.PreserveTextureDimension? "PreserveTextureDimension;" : "ChangeTextureDimension;";
             dataString += rep.BendPart ? "BendPart;" : "NotBendPart;";
             dataString += rep.LeaveAtLeastOne ? "LeaveAtLeastOne;" : "NotLeaveAtLeastOne;";
 

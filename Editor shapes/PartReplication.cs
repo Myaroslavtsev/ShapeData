@@ -38,7 +38,7 @@ namespace ShapeData
 
         public PartScalingMethod ScalingMethod { get; set; }        
 
-        public bool ScaleTexture { get; set; }
+        public bool PreserveTextureDimension { get; set; }
 
         public bool BendPart { get; set; }
 
@@ -61,7 +61,7 @@ namespace ShapeData
         public PartReplication(PartReplicationMethod replicationMethod,
             PartScalingMethod scalingMethod,
             PartStretchInWidthMethod stretchInWidthMethod,
-            bool scaleTexture,
+            bool preserveTextureDimension,
             bool bendPart,
             bool leaveAtLeastOne,
             Dictionary<string, float> replicationParams = null)
@@ -69,7 +69,7 @@ namespace ShapeData
             ReplicationMethod = replicationMethod;
             ScalingMethod = scalingMethod;
             StretchInWidthMethod = stretchInWidthMethod;
-            ScaleTexture = scaleTexture;
+            PreserveTextureDimension = preserveTextureDimension;
             BendPart = bendPart;
             LeaveAtLeastOne = leaveAtLeastOne;
 

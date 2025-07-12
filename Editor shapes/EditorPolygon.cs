@@ -66,7 +66,7 @@ namespace ShapeData
                 verticesCopy.Add(
                     new EditorVertex(v.Position.X, v.Position.Y, v.Position.Z, v.UvPosition.X, v.UvPosition.Y));
 
-            return new EditorPolygon(verticesCopy, MaterialType, TextureFilename);
+            return new EditorPolygon(verticesCopy, MaterialType, TextureFilename, Trackbed);
         }
 
         // to think about: how to block from deleting last 3 points but allow increasing point number

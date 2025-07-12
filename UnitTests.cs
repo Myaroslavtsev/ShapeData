@@ -268,6 +268,7 @@ namespace ShapeData
         public async Task ShapeCreationTest()
         {
             var editorShape = new EditorShape("ThreePolyShapeSmooth.s");
+            editorShape.AddLod(new EditorLod(2000));
 
             var part = editorShape.Lods[0].AddPart(new EditorPart("Angle", PartReplication.NoReplication(), true));
 
@@ -285,6 +286,7 @@ namespace ShapeData
         public async Task MultiLodShapeCreationTest()
         {
             var editorShape = new EditorShape("ThreePolyShapeWithLods.s");
+            editorShape.AddLod(new EditorLod(2000));
 
             var part = editorShape.Lods[0].AddPart(new EditorPart("Angle", PartReplication.NoReplication(), false));
 
